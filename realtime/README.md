@@ -116,6 +116,30 @@ card is a live mini game world). Open `game/walkers.html`.
 `index.html` (one shared world) and `walkers.html` (solo arenas) share `game.js` and the same hub
 feed — pick whichever framing suits the demo.
 
+### `game/emerald.html` — Walk Buddies **Emerald** (full-colour rebuild) ⭐ current
+
+The headline build: the Arenas, **rebuilt in full-colour Pokémon Emerald (GBA)**. Same engine
+(`game.js`) and hub feed; a re-skin (16 px Emerald metatiles + colour front sprites) plus the
+gamification MVP the three persona studies converged on. Open `game/emerald.html`.
+
+- **Full-colour Littleroot Town** — each card renders the real 20×20 Emerald town against a
+  true-colour metatile atlas; buddies are colour front sprites (Pikachu is actually yellow).
+- **Wake your buddy** — overnight the buddy sleeps (💤); the first walk of a new calendar day wakes
+  it, adds a **walk-day**, and ripens the **berry garden** one stage (5 stages, planted→ripe; it
+  **never wilts** on a missed day).
+- **MOVE bar → Level Up** with the R&D code-gap fixes: a gentle **quality multiplier** on fill
+  (`0.85 + 0.15·rhythm`), a **daily soft cap** (~4 levels/day, then "happily tired" nudge), a longer
+  **18 s** rest grace, and a **per-user cadence target** learned from the User's own baseline (never a
+  fixed population norm — ADR-0005). Levels persist and never decrease.
+- **Walk-day pins** (3/7/14/30 days, thank-yous never challenges) and a **Friends Album** — a gentle
+  gallery of buddies/keepsakes you've collected, with no "X of 12" checklist.
+- **Accessibility** — ≥16 px user-scalable text (A−/A+), mood shown as icon **and** word, a striped
+  MOVE bar (shape + label + %, not colour alone), large tap targets, `prefers-reduced-motion`.
+
+Constants + reward/pin ladders are at the top of `emerald.js`; per-walker progress (level, walk-days,
+garden, baseline, album) persists in `localStorage` (`mw-prog-<id>`). All copy is claim-safe: the MOVE
+bar is the **buddy's** energy, not the User's vitality; quality is judged vs the User's *own* baseline.
+
 ### Build the world assets
 
 The recolored tileset + map JSON + recolored buddy/emote sprites under `game/assets/` are
@@ -124,8 +148,15 @@ generated from the read-only pokered checkout (expected at
 
 ```bash
 cd realtime/game
-python3 build-assets.py     # needs Pillow; emits assets/ + recolors sprites to DMG green
+python3 build-assets.py            # monochrome: pokered 2bpp → DMG-green assets/  (needs Pillow)
+python3 build-emerald-assets.py    # full-colour: pokeemerald → assets-emerald/    (needs Pillow)
 ```
+
+`build-emerald-assets.py` reads the read-only [pret/pokeemerald](https://github.com/pret/pokeemerald)
+checkout (expected at `/Users/mingrath/ghq/github.com/pret/pokeemerald`) and bakes Littleroot Town's
+metatiles + JASC-PAL palettes into a true-colour **metatile atlas** (frame index == metatile id), a
+`{wTiles,hTiles,tiles,walkable}` map JSON, 12 colour front sprites, 3 emotes, and a 5-stage berry
+`garden.png` — all into `assets-emerald/`. (The recipe is mapped in `/tmp/moonwalk-pokeemerald-asset-map.md`.)
 
 `vendor/phaser.min.js` is checked in so the game runs fully offline (no CDN at demo time).
 Claim safety: buddy moods are **encouragement, not a health rating**
