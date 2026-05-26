@@ -1,5 +1,7 @@
 # PRD: Moon Walk
 
+> *WHOOP for your walking aid.*
+
 > Glossary: see [`CONTEXT.md`](../CONTEXT.md). Decisions: see [`docs/adr/`](./adr).
 > Capitalised terms (Host Aid, Stick Cycle, Handle Load, Baseline, Drift, Alert, …)
 > are defined there and used precisely throughout.
@@ -39,6 +41,15 @@ left, and a chair directly in front of you." A separate, fully-offline **Proximi
 Alert** (ToF distance → buzzer/haptic) gives an instant obstacle warning. This is the
 see-and-speak assistive layer; it complements, and is built on the same hardware as,
 the gait-monitoring layer.
+
+**Moon Walk also motivates** (ADR-0008). The companion app presents the User's own
+movement as **Walk Buddies** — a gentle, claim-safe motivation view where a Pokémon-style
+Buddy's mood, posture, and energy follow how the User walks. A **MOVE** bar fills as they
+walk and **Levels Up** the Buddy; showing up grows **Walk-Days**, thank-you **Pins**, and a
+never-wilting berry **Garden**. It is an engagement layer over the *same* gait metrics — not
+a new sensor and not a health score: rewards for showing up need no comparison, any
+quality-based encouragement is judged against the User's *own* Baseline (never a norm), and
+the MOVE bar is the Buddy's energy, never the User's vitality.
 
 **Hardware: two boards** (ADR-0004). A stick-mounted **Sensor Node** (Arduino Nano)
 owns the always-on real-time sensors and tactile feedback; a **Compute Brain**
@@ -89,6 +100,14 @@ intelligence. They are linked by a wired UART.
 32. As a user, I want the see-and-speak feature to keep working acceptably if the cloud is slow or unreachable, so that a bad connection doesn't leave me with nothing (offline Proximity Alert + a canned fallback phrase).
 33. As a user, I want to understand that the spoken descriptions are an assistive convenience and not a safety guarantee, so that I keep using my own judgement and attention.
 34. As a user, I want to know that camera frames for descriptions go to a cloud service (unlike my gait/health data, which stays on-device), so that I can make an informed privacy choice.
+
+### Motivation companion — Walk Buddies (see ADR-0008, ADR-0006)
+35. As a user, I want my walking shown as a friendly Buddy whose mood and liveliness follow how I move, so that daily walking feels encouraging rather than clinical.
+36. As a user, I want a MOVE energy bar that fills as I walk and Levels Up my Buddy — framed as the Buddy's energy, not my health — so that I feel a small win each session without it implying a health rating.
+37. As a user, I want show-up rewards (additive Walk-Days, thank-you Pins, a berry Garden that never wilts on a rest day), so that consistency is celebrated and missing a day is never punished.
+38. As a user, I want any quality-based encouragement compared to my own recent Baseline ("smoother than last week"), never to other people or a population norm, so that it stays fair and claim-safe (ADR-0005).
+39. As a user, I want the motivation view to carry the same wellness disclaimer and keep coaching phrasing behind Training Mode, so that encouragement is never mistaken for a medical assessment (ADR-0005, ADR-0006).
+40. As a user, I want my Buddy large and expressive (readable face, posture, idle animation, emotes), so that I can read its reaction to my walking at a glance.
 
 ### Intelligence & validation
 25. As a user, I want Moon Walk to learn my normal Baseline over repeated sessions, so that Alerts reflect my own normal, not a generic standard.
@@ -151,6 +170,12 @@ intelligence. They are linked by a wired UART.
     ≤1024px JPEG, call the cloud **VLM** for a **Scene Description**, hand the text to
     **TTS**, play it on the speaker. Handles timeouts and a canned fallback phrase;
     offline object-detection + offline TTS Bricks are the no-network fallback (ADR-0003).
+12. **Walk Buddies (companion motivation view)** *(ADR-0008)* — a presentation layer over
+    the live gait metrics: maps a 0–100 **Moon Walk Score** to a Buddy **Mood** + posture,
+    runs the show-up reward loop (**MOVE** energy → **Level**, **Walk-Days**, **Pins**,
+    **Garden**) and the **Friends Album**. Reads metrics only — adds no sensing and changes
+    no claim-safety surface. Built and validated as a local web app (ADR-0007) with a
+    simulated feed; the current build is full-colour Pokémon-Emerald art.
 
 ### Key technical decisions
 - **Wellness positioning + enforced claim-safety vocabulary** (ADR-0005). The person
@@ -179,6 +204,11 @@ intelligence. They are linked by a wired UART.
   disclosed exception.
 - **The demo path needs Wi-Fi**; bring a phone hotspot, never trust venue Wi-Fi. Use
   the stateless frame→VLM→TTS path (not a realtime socket) for resilience.
+- **Motivation is a claim-safe companion layer, not a score** (ADR-0008). Walk Buddies
+  turns movement into encouragement (Buddy Mood + posture, MOVE energy → Levels, Walk-Days,
+  Pins, Garden, Friends Album). Show-up rewards need no comparison; quality is judged vs the
+  User's own Baseline, never a norm; the MOVE bar is the Buddy's energy, not the User's
+  vitality. Levels never decrease and streaks never break (elderly-appropriate, all carrot).
 
 ## Testing Decisions
 
@@ -217,6 +247,10 @@ pure-logic modules + fixture-driven known-answer tests.
 - Cloud sync/accounts for **gait/health data**, and a live clinician dashboard (gait
   data is user-exported only, and only if the User chooses). Note: the see-and-speak layer *does* use a cloud VLM
   for camera frames — a scoped, disclosed exception (ADR-0003), not health-data sync.
+- **Competitive or comparative gamification** in Walk Buddies — leaderboards, ranked
+  contests, battles, fixed score thresholds, or any reward that scales with speed/distance
+  or ranks Users against each other or a population norm (ADR-0008). Motivation is
+  show-up-based and self-referential only.
 - Automatic Host Aid mode detection (manual selection at setup instead).
 - Camera-based optical-flow **odometry** (deferred; Walker Mode uses a wheel encoder).
   Note: the camera *is* now used for see-and-speak Scene Description (ADR-0003), via a

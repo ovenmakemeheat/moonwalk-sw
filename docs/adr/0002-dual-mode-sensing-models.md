@@ -24,3 +24,14 @@ because no common model yields valid distance for both. Supporting only one host
 **Consequences.** ~2× the integration and validation work, and Walker Mode needs
 hardware (wheel encoder, dual-grip FSRs) the cane build does not. Accepted
 deliberately.
+
+**Hardware status (2026-05): Cane Mode runs IMU-only for now.** The only sensor in
+hand is the Arduino Nano 33 BLE's onboard LSM9DS1 IMU; the **Handle Load** FSR is
+designed but not yet acquired. Until it is, the stick-plant / ZUPT reset is detected
+from **IMU stillness** (angular rate ≈ 0 + accel impact) instead of the FSR load edge,
+and the **Stick Duty Factor** / stance-time proxy is the IMU-inferred *planted fraction*
+rather than a force-measured loaded fraction — a notch less robust at the plant/lift
+edges, and unable to tell a weight-bearing plant from a light touch. The Pendulum Model
+itself (gyro × stick length) is unaffected. Adding the FSR is a cheap upgrade that
+restores the load-anchored ZUPT and the force-based loading metrics. Walker Mode is
+blocked until its wheel-encoder + dual-grip FSRs are acquired. See `docs/architecture.html`.

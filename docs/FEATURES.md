@@ -43,7 +43,22 @@ treatment, or fall-risk prediction. See the Claim Safety language discipline in
 | Graceful degradation | Offline proximity + canned fallback when cloud is slow/unreachable | US-32 |
 | Assistive-only disclosure | Clear that it's a convenience, not a safety guarantee | US-33 |
 
-### 1.3 Supporting features
+### 1.3 Walk Buddies — motivation companion (ADR-0008)
+An encouragement layer over the gait metrics — never a health rating. Reads the live
+metrics, adds no sensing. Built/validated as a local web view (ADR-0007); current build is
+full-colour Pokémon-Emerald art.
+| Feature | Description | PRD ref |
+|---|---|---|
+| Buddy + Mood | Pokémon-style Buddy whose mood & posture follow the 0–100 Moon Walk Score (Asleep→Thrilled) | US-35, 40 |
+| MOVE bar → Level Up | Buddy energy fills while walking, drains after a rest grace; filling it Levels Up (Level never decreases) | US-36 |
+| Walk-Days + Pins | Additive lifetime walk-day count + thank-you milestone pins; streak never breaks | US-37 |
+| Berry Garden | Advances one stage per walk-day; never wilts on a missed day (rest celebrated) | US-37 |
+| Friends Album | Gentle gallery of collected buddies/keepsakes — no completion checklist | US-37 |
+| Self-referential quality | Quality encouragement compared to the User's own Baseline, never a norm | US-38 |
+| Claim-safe framing | Same wellness disclaimer; MOVE bar = Buddy's energy not User's vitality; coaching behind Training Mode | US-39 |
+| Accessibility | ≥16px scalable text, mood as icon+word, shape+label (not colour alone), large tap targets | US-40 |
+
+### 1.4 Supporting features
 | Feature | Description | PRD ref |
 |---|---|---|
 | Clip-on form factor | Attaches to existing stick/walker; battery-powered, unobtrusive | US-1, 7 |

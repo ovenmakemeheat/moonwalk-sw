@@ -1,5 +1,9 @@
 # Scope Moon Walk as measure-and-trend, not diagnostic
 
+> **Status:** accepted; amended by [ADR-0006](./0006-opt-in-training-mode-coaching-cue.md),
+> which adds an opt-in Training Mode that also coaches *in the moment*. Trend-only
+> remains the default posture.
+
 Moon Walk records gait metrics, trends them against the patient's own learned
 **Baseline**, and may raise a non-medical **Alert** ("your walking has changed —
 consider contacting your clinician"). It explicitly does **not** diagnose, predict
