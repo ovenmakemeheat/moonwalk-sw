@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Moon Walk · Walk Buddies</title>
+<style>
+  :root{
+    --gb0:#9bbc0f; --gb1:#8bac0f; --gb2:#306230; --gb3:#0f380f;
+    --ink:#0f380f; --panel:#c4cfa1;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:"Courier New",monospace;background:#1b2415;color:var(--ink);
+       display:flex;flex-direction:column;overflow:hidden}
+
+  header{display:flex;align-items:center;gap:14px;padding:8px 14px;background:var(--gb3);
+         color:var(--gb0);border-bottom:3px solid var(--gb2)}
+  header h1{font-size:15px;margin:0;letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
+  header h1 small{display:block;font-size:9px;opacity:.7;letter-spacing:2px}
+  .state{display:flex;align-items:center;gap:6px;font-size:11px}
+  .led{width:10px;height:10px;border-radius:50%;background:#666;box-shadow:0 0 6px #666}
+  .spacer{flex:1}
+  header input{font:inherit;font-size:11px;width:150px;padding:3px 6px;border:2px solid var(--gb1);
+         background:var(--gb3);color:var(--gb0);border-radius:3px}
+  header button,.toggle{font:inherit;font-size:11px;font-weight:bold;padding:4px 10px;cursor:pointer;
+         border:2px solid var(--gb0);background:var(--gb2);color:var(--gb0);border-radius:4px}
+  .toggle{display:flex;align-items:center;gap:6px;user-select:none}
+  .toggle.on{background:var(--gb0);color:var(--gb3)}
+
+  main{flex:1;display:flex;min-height:0}
+  #stagewrap{flex:1;position:relative;display:flex;flex-direction:column;min-width:0;background:#13200d}
+  #stage{flex:1;min-height:0;image-rendering:pixelated}
+  #stage canvas{display:block;margin:0 auto}
+
+  /* classic Pokémon dialogue box */
+  #dialogue{position:relative;margin:0 14px 12px;min-height:74px;background:var(--gb0);
+            color:var(--gb3);border:3px solid var(--gb3);border-radius:8px;
+            box-shadow:0 0 0 3px var(--gb0),0 0 0 6px var(--gb3);padding:12px 16px;
+            font-size:15px;line-height:1.5}
+  #dialogue .tag{position:absolute;top:-12px;left:14px;font-size:9px;font-weight:bold;
+            background:var(--gb3);color:var(--gb0);padding:2px 8px;border-radius:6px;letter-spacing:1px}
+  #dialogue .arrow{position:absolute;right:14px;bottom:8px;font-size:14px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  #dtext .cursor{opacity:.6}
+
+  aside{width:300px;flex-shrink:0;background:var(--panel);border-left:3px solid var(--gb2);
+        overflow-y:auto;padding:12px}
+  aside h2{font-size:12px;margin:0 0 4px;text-transform:uppercase;letter-spacing:1px}
+  aside .hint{font-size:11px;opacity:.7;margin:0 0 12px;line-height:1.4}
+  .walker{display:flex;align-items:center;gap:9px;background:var(--gb0);border:2px solid var(--gb2);
+          border-radius:6px;padding:7px 9px;margin-bottom:9px;cursor:pointer}
+  .walker.focus{border-color:var(--gb3);box-shadow:0 0 0 2px var(--gb3) inset}
+  .walker img{width:34px;height:34px;image-rendering:pixelated;flex-shrink:0}
+  .walker .info{flex:1;min-width:0}
+  .walker .top{display:flex;justify-content:space-between;align-items:baseline}
+  .walker .who{font-weight:bold;font-size:12px}
+  .walker .sc{font-weight:bold;font-size:15px}
+  .walker .mood{font-size:10px;display:inline-block;padding:1px 6px;border-radius:8px;
+          background:var(--gb2);color:var(--gb0);margin-top:2px}
+  .walker select{font:inherit;font-size:10px;margin-top:5px;width:100%;padding:2px;
+          border:1px solid var(--gb2);background:#dfe7c0;color:var(--gb3);border-radius:3px}
+  .bar{height:5px;background:var(--gb2);border-radius:3px;margin-top:5px;overflow:hidden}
+  .bar > i{display:block;height:100%;background:var(--gb3);width:0;transition:width .3s}
+
+  footer{font-size:9px;padding:5px 14px;background:var(--gb3);color:var(--gb0);opacity:.85;
+         text-align:center;letter-spacing:.3px}
+</style>
+</head>
+<body>
+  <header>
+    <h1>Walk Buddies<small>Moon Walk × Pokémon</small></h1>
+    <div class="state"><span class="led" id="led"></span><span id="statetxt">connecting…</span></div>
+    <span class="spacer"></span>
+    <input class="ws" id="wsurl" value="ws://localhost:8765" aria-label="Hub WebSocket URL" />
+    <button id="connect">Connect</button>
+    <button class="toggle" id="trainbtn" aria-pressed="false">🎓 Training Mode: <span id="trainstate">Off</span></button>
+  </header>
+
+  <main>
+    <div id="stagewrap">
+      <div id="stage"></div>
+      <div id="dialogue">
+        <span class="tag" id="dtag">BUDDY</span>
+        <span id="dtext"></span>
+        <span class="arrow">▼</span>
+      </div>
+    </div>
+    <aside>
+      <h2>🐾 Walkers</h2>
+      <p class="hint">Each walker is a Pokémon buddy in the world. Move more to lift your
+        Moon Walk Score — your buddy wakes up, cheers up, and explores. Tap a buddy to hear it speak.</p>
+      <div id="walkerlist"></div>
+    </aside>
+  </main>
+
+  <footer>⚕ Moon Walk is a wellness &amp; motivation companion, not a medical assessment. It does not diagnose, treat, or predict. Buddy moods are encouragement, not a health rating — always relative to your own movement.</footer>
+
+<script src="vendor/phaser.min.js"></script>
+<script src="game.js"></script>
+<script>
+// ============ HUD wiring ============
+window.trainingMode = false;
+
+// connection status LED
+window.setState = function(mode){
+  const led = document.getElementById('led'), tx = document.getElementById('statetxt');
+  const c = mode==='live' ? '#9bbc0f' : mode==='sim' ? '#e0c000' : '#d05050';
+  led.style.background = c; led.style.boxShadow = '0 0 8px ' + c;
+  tx.textContent = mode==='live' ? 'live · hub' : mode==='sim' ? 'simulated · demo data' : 'disconnected';
+};
+
+// ---- Pokémon-style dialogue box: typewriter reveal + blinking arrow ----
+let typeTimer = null, lastLine = '';
+function speak(text, force){
+  if (!force && text === lastLine) return;     // don't restart the same line
+  lastLine = text;
+  const el = document.getElementById('dtext');
+  clearInterval(typeTimer);
+  let i = 0; el.textContent = '';
+  typeTimer = setInterval(() => {
+    el.textContent = text.slice(0, ++i);
+    if (i >= text.length) clearInterval(typeTimer);
+  }, 22);
+}
+function refreshDialogue(force){
+  document.getElementById('dtag').textContent = window.trainingMode ? 'TRAINING' : 'BUDDY';
+  if (focusId == null){ speak('Waiting for a walker to start moving… the demo buddies will arrive shortly!', force); return; }
+  speak(buddyLine(focusId), force);
+}
+window.onFocusChange = () => { renderWalkers(); refreshDialogue(true); };
+
+// training-mode toggle (opt-in coaching, ADR-0006)
+document.getElementById('trainbtn').onclick = function(){
+  window.trainingMode = !window.trainingMode;
+  this.classList.toggle('on', window.trainingMode);
+  this.setAttribute('aria-pressed', String(window.trainingMode));
+  document.getElementById('trainstate').textContent = window.trainingMode ? 'On' : 'Off';
+  refreshDialogue(true);
+};
+
+// ---- walker side panel (sprite, score, mood, buddy picker) ----
+const optionsHtml = POKEMON.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+function renderWalkers(){
+  const host = document.getElementById('walkerlist');
+  if (!order.length){ host.innerHTML = '<p class="hint">No walkers yet.</p>'; return; }
+  host.innerHTML = order.map(id => {
+    const w = walkers[id], mood = moodFor(w._score), name = POKE_BY[w.poke].name;
+    return `<div class="walker ${id===focusId?'focus':''}" data-id="${id}">
+        <img src="assets/pokemon/${w.poke}.png" alt="${name}" />
+        <div class="info">
+          <div class="top"><span class="who">Walker ${id}</span><span class="sc">${w._score}</span></div>
+          <span class="mood">${mood.label}</span>
+          <div class="bar"><i style="width:${w._score}%"></i></div>
+          <select data-id="${id}" aria-label="Choose buddy for Walker ${id}">${optionsHtml}</select>
+        </div></div>`;
+  }).join('');
+  order.forEach(id => { const s = host.querySelector(`select[data-id="${id}"]`); if (s) s.value = walkers[id].poke; });
+  host.querySelectorAll('.walker').forEach(el => el.addEventListener('click', e => {
+    if (e.target.tagName === 'SELECT') return;
+    focusId = el.dataset.id; window.onFocusChange();
+  }));
+  host.querySelectorAll('select').forEach(sel => sel.addEventListener('change', e => {
+    const id = sel.dataset.id; walkers[id].poke = sel.value;
+    localStorage.setItem('mw-buddy-' + id, sel.value);
+    renderWalkers(); refreshDialogue(true);            // scene picks up the new sprite in update()
+  }));
+}
+window.onRosterChange = renderWalkers;
+
+// live refresh of scores/moods in the panel, and re-voice the focused buddy periodically
+setInterval(renderWalkers, 600);
+setInterval(() => refreshDialogue(false), 6500);
+
+// ============ launch the Phaser world, then connect the data feed ============
+window.onSceneReady = () => { connect(); renderWalkers(); refreshDialogue(true); };
+game = new Phaser.Game({
+  type: Phaser.AUTO,
+  parent: 'stage',
+  pixelArt: true,
+  backgroundColor: '#0f380f',
+  scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH, width: 320, height: 288 },
+  scene: World,
+});
+</script>
+</body>
+</html>

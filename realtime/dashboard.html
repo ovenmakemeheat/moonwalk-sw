@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Moon Walk — Live Multi-Walker</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root{--bg:#0b1020;--panel:#131c2e;--panel2:#0f1726;--line:#22304a;--text:#e7eef7;
+    --muted:#8aa0b6;--accent:#a78bfa;--teal:#34d399;--amber:#f6b352;--red:#f87171}
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,#1a2440 0,var(--bg) 55%);
+    color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:1160px;margin:0 auto;padding:24px 20px 60px}
+  header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+  .logo{font-size:24px;font-weight:700}.logo .moon{color:var(--accent)}
+  .tag{color:var(--muted);font-style:italic}
+  .status{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
+  .led{width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red)}
+  .led.on{background:var(--teal);box-shadow:0 0 8px var(--teal)}
+  input.ws{background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    border-radius:8px;padding:4px 8px;font-size:12px;width:190px}
+  button{background:var(--accent);color:#0b1020;border:0;border-radius:8px;padding:5px 12px;
+    font-weight:600;cursor:pointer;font-size:12.5px}
+  .sub{color:var(--muted);font-size:13px;margin:2px 0 18px}
+  .grid{display:grid;grid-template-columns:1fr;gap:18px}
+  @media(min-width:920px){.grid{grid-template-columns:1.4fr .8fr}}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
+    border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .card h2{margin:0 0 2px;font-size:15px}.card .hint{color:var(--muted);font-size:12px;margin:0 0 8px}
+  #wave{width:100%;height:200px}#cad{width:100%;height:210px}#board{width:100%;height:170px}
+  #gauge{width:230px;height:180px;margin:0 auto}
+  #radar{width:100%;height:300px}
+  .scoreg{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px}
+  .gcell{flex:1;min-width:96px;text-align:center}
+  .gmini{width:100%;height:108px}
+  .gmeta{color:var(--muted);font-size:11px;margin-top:-12px}
+  .gmeta b{color:var(--text)}
+  .row{display:flex;gap:14px;flex-wrap:wrap}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+  .chip{font-size:12px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);
+    border-radius:999px;padding:3px 10px}
+  .chip b{color:var(--text)}
+  select{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:4px 8px}
+  .cue{margin:6px auto 0;width:max-content;padding:7px 15px;border-radius:999px;font-weight:600;
+    background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.5);color:var(--teal)}
+  .cue.faster{background:rgba(246,179,82,.12);border-color:rgba(246,179,82,.5);color:var(--amber)}
+  .cue.slower{background:rgba(91,155,213,.14);border-color:rgba(91,155,213,.5);color:#9cc4ee}
+  .mods{display:flex;gap:8px;justify-content:center;margin-top:10px}
+  .mod{display:flex;flex-direction:column;align-items:center;gap:4px;width:70px;padding:8px 4px;
+    border-radius:10px;background:var(--panel2);border:1px solid rgba(52,211,153,.5);
+    color:var(--teal);font-size:11px}
+  .mod .ic{font-size:18px}
+  .disc{margin-top:12px;padding:8px 11px;border-radius:10px;font-size:11px;line-height:1.4;
+    background:rgba(91,155,213,.08);border:1px solid rgba(91,155,213,.35);color:#bcd4ee}
+  .footer{margin-top:20px;padding:9px 14px;border:1px dashed var(--line);border-radius:10px;
+    color:var(--muted);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <span class="logo"><span class="moon">◗</span> Moon Walk</span>
+    <span class="tag">WHOOP for your walking aid.</span>
+    <span class="status">
+      <input class="ws" id="wsurl" value="ws://localhost:8765" />
+      <button id="connect">Connect</button>
+      <span class="led" id="led"></span><span id="statetxt">disconnected</span>
+    </span>
+  </header>
+  <div class="sub">Live multi-walker view — IMU streams from each Nano 33 BLE → BLE hub → this dashboard. Walkers appear automatically as they connect.</div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Gait Profile</h2>
+      <p class="hint">Six gait dimensions per walker (0–100), derived live from the IMU stream — a fair shape comparison, not a ranking of ability.</p>
+      <div id="radar"></div>
+    </section>
+    <section class="card">
+      <h2>Moon Walk Score — all walkers</h2>
+      <p class="hint">Each walker's live score (0–100), blended from rhythm, activity &amp; endurance. Relative to their own walking, never a population norm.</p>
+      <div class="scoreg" id="scoreGauges"></div>
+    </section>
+  </div>
+
+  <div class="grid" style="margin-top:18px">
+    <div>
+      <section class="card" style="margin-bottom:18px">
+        <h2>Live signal — gyro swing (deg/s)</h2>
+        <p class="hint">Raw real-time IMU stream, one line per walker (last ~6 s).</p>
+        <div id="wave"></div>
+      </section>
+      <section class="card">
+        <h2>Live cadence comparison (cycles/min)</h2>
+        <p class="hint">Derived in the hub from Stick-Cycle detection — updates as each walker moves (last 30 s).</p>
+        <div id="cad"></div>
+      </section>
+    </div>
+
+    <div>
+      <section class="card" style="margin-bottom:18px">
+        <h2>Leaderboard — current cadence</h2>
+        <p class="hint">Live, all connected walkers.</p>
+        <div id="board"></div>
+      </section>
+      <section class="card">
+        <h2>Training Mode — live coaching</h2>
+        <div class="hint">Coaching <select id="focus"></select> toward their own target.</div>
+        <div id="gauge"></div>
+        <div class="cue" id="cue">nice rhythm</div>
+        <div class="chips" style="justify-content:center">
+          <span class="chip">target <b id="tgt">52</b></span>
+          <span class="chip">now <b id="now">–</b></span>
+          <span class="chip">cycles <b id="cyc">0</b></span>
+        </div>
+        <div class="mods">
+          <div class="mod"><span class="ic">🔊</span>Voice</div>
+          <div class="mod"><span class="ic">📳</span>Vibration</div>
+          <div class="mod"><span class="ic">💡</span>LED</div>
+        </div>
+        <div class="disc"><b>Coaching, not correction.</b> A wellness cue toward your own rhythm — not physiotherapy, gait correction, or medical treatment.</div>
+      </section>
+    </div>
+  </div>
+
+  <div class="footer">⚕ MEDICAL CLAIM SAFETY — Moon Walk is a wellness awareness cue, not a medical assessment. It does not diagnose, treat, or predict.</div>
+</div>
+
+<script>
+const PALETTE=['#a78bfa','#34d399','#f6b352','#5b9bd5','#f87171','#22d3ee','#e879f9','#a3e635'];
+const TEXT='#e7eef7',MUTED='#8aa0b6',LINE='#22304a';
+const WAVE_N=300, CAD_WIN=30000;
+const walkers={};            // id -> {color, wave:[], cad:[[t,v]], cadence, cycles}
+const order=[];
+let focusId=null, target=52, lastProf=0;
+
+function ensure(id){
+  if(!walkers[id]){
+    walkers[id]={color:PALETTE[order.length%PALETTE.length],wave:[],cad:[],cadence:0,cycles:0};
+    order.push(id);
+    const o=document.createElement('option');o.value=id;o.textContent='Walker '+id;
+    document.getElementById('focus').appendChild(o);
+    if(focusId===null){focusId=id;document.getElementById('focus').value=id;}
+  }
+  return walkers[id];
+}
+
+// ---- charts ----
+const wave=echarts.init(document.getElementById('wave'));
+const cad=echarts.init(document.getElementById('cad'));
+const board=echarts.init(document.getElementById('board'));
+const gauge=echarts.init(document.getElementById('gauge'));
+const radar=echarts.init(document.getElementById('radar'));
+const baseAxis={axisLine:{lineStyle:{color:LINE}},axisLabel:{color:MUTED},splitLine:{lineStyle:{color:LINE}}};
+
+// ---- Gait Profile (radar) + Moon Walk Score (per-walker gauges), computed live ----
+const RADAR_AXES=['Cadence','Rhythm','Swing','Duty','Endurance','Activity'];
+const clamp=x=>Math.max(0,Math.min(100,x));
+function ensureGauge(id){
+  if(walkers[id]._g) return;
+  const host=document.getElementById('scoreGauges');
+  const cell=document.createElement('div');cell.className='gcell';
+  const el=document.createElement('div');el.className='gmini';
+  const meta=document.createElement('div');meta.className='gmeta';meta.innerHTML='<b>Walker '+id+'</b>';
+  cell.appendChild(el);cell.appendChild(meta);host.appendChild(cell);
+  const g=echarts.init(el);
+  g.setOption({series:[{type:'gauge',startAngle:210,endAngle:-30,min:0,max:100,radius:'94%',center:['50%','56%'],
+    axisLine:{lineStyle:{width:8,color:[[1,'#243049']]}},
+    progress:{show:true,width:8,roundCap:true,itemStyle:{color:walkers[id].color}},
+    axisTick:{show:false},splitLine:{show:false},axisLabel:{show:false},pointer:{show:false},anchor:{show:false},
+    detail:{fontSize:22,fontWeight:700,offsetCenter:[0,'4%'],color:TEXT,formatter:'{value}'},
+    title:{show:false},data:[{value:0}]}]});
+  walkers[id]._g=g;
+}
+function computeProfile(w){
+  const cv0=w.cad.map(p=>p[1]).filter(x=>x>0);
+  const m=cv0.length?cv0.reduce((a,b)=>a+b,0)/cv0.length:0;
+  const sd=cv0.length?Math.sqrt(cv0.reduce((a,b)=>a+(b-m)*(b-m),0)/cv0.length):0;
+  const cv=m?sd/m:0;
+  let mn=1e9,mx=-1e9,plant=0,moving=0; const wv=w.wave;
+  wv.forEach(v=>{if(v<mn)mn=v;if(v>mx)mx=v;const a=Math.abs(v);if(a<22)plant++;if(a>40)moving++;});
+  const swing=wv.length?(mx-mn)/2:0, pf=wv.length?plant/wv.length:0, mf=wv.length?moving/wv.length:0;
+  const ax=[clamp((m-30)/35*100), clamp(100-cv*700), clamp(swing/160*100),
+            clamp(pf*230), clamp(w.cycles/40*100), clamp(mf*140)];
+  w._profile=ax.map(x=>Math.round(x));
+  w._score=Math.round(clamp(0.30*ax[1]+0.20*ax[0]+0.20*ax[4]+0.15*ax[5]+0.15*ax[2]));
+}
+function updateProfiles(){
+  if(!order.length) return;
+  order.forEach(id=>{computeProfile(walkers[id]);ensureGauge(id);});
+  radar.setOption({color:order.map(id=>walkers[id].color),
+    legend:{data:order.map(id=>'W'+id),textStyle:{color:MUTED},bottom:0},
+    tooltip:{backgroundColor:'#0f1726',borderColor:LINE,textStyle:{color:TEXT}},
+    radar:{indicator:RADAR_AXES.map(name=>({name,max:100})),center:['50%','46%'],radius:'60%',
+      axisName:{color:MUTED,fontSize:10},splitNumber:4,
+      splitLine:{lineStyle:{color:LINE}},axisLine:{lineStyle:{color:LINE}},
+      splitArea:{areaStyle:{color:['rgba(255,255,255,0.02)','transparent']}}},
+    series:[{type:'radar',symbolSize:3,animationDurationUpdate:300,
+      data:order.map(id=>({value:walkers[id]._profile||[0,0,0,0,0,0],name:'W'+id,
+        areaStyle:{opacity:0.08},lineStyle:{width:2}}))}]},{notMerge:true});
+  order.forEach(id=>{ if(walkers[id]._g) walkers[id]._g.setOption({series:[{data:[{value:walkers[id]._score||0}]}]}); });
+}
+
+gauge.setOption({series:[{type:'gauge',min:30,max:70,startAngle:210,endAngle:-30,radius:'100%',
+  center:['50%','60%'],axisLine:{lineStyle:{width:14,color:[[0.5,'#243049'],[0.7,'#34d399'],[1,'#243049']]}},
+  pointer:{itemStyle:{color:TEXT},width:5,length:'60%'},axisTick:{show:false},
+  splitLine:{distance:-14,length:14,lineStyle:{color:'#3a4a68'}},axisLabel:{distance:-2,color:MUTED,fontSize:9},
+  detail:{fontSize:30,fontWeight:700,color:TEXT,offsetCenter:[0,'34%'],formatter:'{value}'},
+  title:{offsetCenter:[0,'62%'],color:MUTED,fontSize:10},
+  data:[{value:0,name:'cyc/min · target '+target}]}]});
+
+function render(){
+  const now=Date.now()+0; // local clock only used if no t; we use sample t for cad axis
+  // waveform
+  wave.setOption({animation:false,grid:{left:8,right:10,top:10,bottom:18,containLabel:true},
+    legend:{data:order.map(id=>'W'+id),textStyle:{color:MUTED},top:0,right:8},
+    tooltip:{show:false},
+    xAxis:{type:'category',show:false,data:Array.from({length:WAVE_N},(_,i)=>i)},
+    yAxis:Object.assign({type:'value',min:-220,max:220},baseAxis),
+    series:order.map(id=>({name:'W'+id,type:'line',showSymbol:false,
+      data:walkers[id].wave,lineStyle:{color:walkers[id].color,width:1.4},emphasis:{disabled:true}}))
+  },{notMerge:true});
+
+  // cadence over time
+  let tmax=0; order.forEach(id=>{const c=walkers[id].cad;if(c.length)tmax=Math.max(tmax,c[c.length-1][0]);});
+  cad.setOption({animation:false,grid:{left:8,right:14,top:24,bottom:24,containLabel:true},
+    legend:{data:order.map(id=>'W'+id),textStyle:{color:MUTED},top:0,right:8},
+    tooltip:{trigger:'axis',backgroundColor:'#0f1726',borderColor:LINE,textStyle:{color:TEXT}},
+    xAxis:Object.assign({type:'value',min:tmax?tmax-CAD_WIN:undefined,max:tmax||undefined,
+      axisLabel:{color:MUTED,formatter:v=>'-'+Math.max(0,Math.round((tmax-v)/1000))+'s'}},{axisLine:{lineStyle:{color:LINE}},splitLine:{lineStyle:{color:LINE}}}),
+    yAxis:Object.assign({type:'value',name:'cyc/min',nameTextStyle:{color:MUTED},min:20,max:70},baseAxis),
+    series:order.map(id=>({name:'W'+id,type:'line',showSymbol:false,smooth:true,
+      data:walkers[id].cad,lineStyle:{color:walkers[id].color,width:2}}))
+  },{notMerge:true});
+
+  // leaderboard
+  const rows=order.map(id=>({id,v:Math.round(walkers[id].cadence)})).sort((a,b)=>a.v-b.v);
+  board.setOption({animation:false,grid:{left:8,right:36,top:6,bottom:8,containLabel:true},
+    xAxis:Object.assign({type:'value',min:0,max:70,axisLabel:{color:MUTED}},{splitLine:{lineStyle:{color:LINE}},axisLine:{lineStyle:{color:LINE}}}),
+    yAxis:{type:'category',data:rows.map(r=>'W'+r.id),axisLabel:{color:TEXT},axisLine:{lineStyle:{color:LINE}},axisTick:{show:false}},
+    series:[{type:'bar',data:rows.map(r=>({value:r.v,itemStyle:{color:walkers[r.id].color}})),
+      barWidth:16,label:{show:true,position:'right',color:MUTED,formatter:'{c}'}}]
+  },{notMerge:true});
+
+  // training gauge for focused walker
+  if(focusId&&walkers[focusId]){
+    const v=Math.round(walkers[focusId].cadence);
+    gauge.setOption({series:[{data:[{value:v,name:'cyc/min · target '+target}]}]});
+    document.getElementById('now').textContent=v||'–';
+    document.getElementById('cyc').textContent=walkers[focusId].cycles;
+    const cueEl=document.getElementById('cue');
+    if(!v){cueEl.textContent='waiting…';cueEl.className='cue';}
+    else if(v<target-3){cueEl.textContent='↑ a touch faster';cueEl.className='cue faster';}
+    else if(v>target+3){cueEl.textContent='↓ ease the pace';cueEl.className='cue slower';}
+    else {cueEl.textContent='nice rhythm';cueEl.className='cue';}
+  }
+  if(now-lastProf>400){ updateProfiles(); lastProf=now; }   // refresh radar + score gauges ~2.5 Hz
+  requestAnimationFrame(render);
+}
+requestAnimationFrame(render);
+
+document.getElementById('focus').onchange=e=>{focusId=e.target.value;};
+
+// ---- message handling (shared by live socket + simulated fallback) ----
+function handleMsg(m){
+  if(m.type==='sample'){const w=ensure(m.walker);w.wave.push(m.gz);if(w.wave.length>WAVE_N)w.wave.shift();}
+  else if(m.type==='metrics'){const w=ensure(m.walker);w.cadence=m.cadence;w.cycles=m.cycles;
+    w.cad.push([m.t,m.cadence]);const cut=m.t-CAD_WIN;while(w.cad.length&&w.cad[0][0]<cut)w.cad.shift();}
+  else if(m.type==='roster'){(m.walkers||[]).forEach(id=>ensure(id));}
+}
+function setState(mode){
+  const led=document.getElementById('led'), tx=document.getElementById('statetxt');
+  const c=mode==='live'?'var(--teal)':mode==='sim'?'var(--amber)':'var(--red)';
+  led.style.background=c; led.style.boxShadow='0 0 8px '+c;
+  tx.textContent=mode==='live'?'live · hub':mode==='sim'?'simulated · demo data':'disconnected';
+}
+
+// ---- in-browser simulated feed (used when no hub is reachable, e.g. hosted) ----
+let simTimer=null;
+function startSim(){
+  if(simTimer) return;
+  setState('sim');
+  const PRELOAD=CAD_WIN;   // ms of history to backfill so charts look full immediately
+  const W=[{id:'A',amp:140,base:54,ph:0},{id:'B',amp:135,base:48,ph:1.7},{id:'C',amp:145,base:42,ph:3.1}]
+    .map(w=>Object.assign(w,{lastCad:w.base}));
+  const cadAt=(w,sec)=>w.base+4*Math.sin(sec/7);   // smooth natural wander, continuous in time
+  handleMsg({type:'roster',walkers:W.map(w=>w.id)});
+  // --- backfill mock history so "Live cadence comparison" + signal are populated at load ---
+  W.forEach(w=>{
+    const wk=ensure(w.id);
+    for(let T=0;T<=PRELOAD;T+=250)                         // cadence points, 4 Hz, full 30 s window
+      wk.cad.push([T, Math.round(cadAt(w,T/1000)*10)/10]);
+    for(let i=0;i<WAVE_N;i++){                             // gyro trace, last ~6 s
+      const sec=(PRELOAD-(WAVE_N-i)*20)/1000, f=cadAt(w,sec)/60;
+      wk.wave.push(Math.round((w.amp*Math.sin(2*Math.PI*f*sec+w.ph)+(Math.random()*14-7))*10)/10);
+    }
+    w.cycAcc=w.base/60*(PRELOAD/1000);                     // believable cycle count for 30 s walked
+    wk.cadence=Math.round(cadAt(w,PRELOAD/1000)*10)/10; wk.cycles=Math.floor(w.cycAcc);
+  });
+  const t0=performance.now(); let k=0;
+  simTimer=setInterval(()=>{
+    const sec=(performance.now()-t0)/1000+PRELOAD/1000, nowMs=Math.round(sec*1000); k++;
+    W.forEach(w=>{
+      const cad=cadAt(w,sec); w.lastCad=cad;
+      const f=cad/60, v=w.amp*Math.sin(2*Math.PI*f*sec+w.ph)+(Math.random()*14-7);
+      handleMsg({type:'sample',walker:w.id,t:nowMs,gz:Math.round(v*10)/10});
+    });
+    if(k%12===0) W.forEach(w=>{ w.cycAcc+=w.lastCad*(0.24/60);
+      handleMsg({type:'metrics',walker:w.id,t:nowMs,cadence:Math.round(w.lastCad*10)/10,cycles:Math.floor(w.cycAcc)});});
+  },20);
+}
+function stopSim(){ if(simTimer){clearInterval(simTimer);simTimer=null;} }
+
+// ---- websocket (prefers a real hub; falls back to the simulated feed) ----
+let ws=null, everOpen=false, fbTimer=null;
+function connect(){
+  const url=document.getElementById('wsurl').value.trim();
+  if(ws){try{ws.close()}catch(e){}}
+  everOpen=false; clearTimeout(fbTimer);
+  fbTimer=setTimeout(()=>{ if(!everOpen) startSim(); }, 2500);   // no hub in 2.5s -> simulate
+  try{ ws=new WebSocket(url); }
+  catch(e){ startSim(); return; }                                // mixed-content/https -> simulate
+  ws.onopen=()=>{ everOpen=true; clearTimeout(fbTimer); stopSim(); setState('live'); };
+  ws.onmessage=e=>handleMsg(JSON.parse(e.data));
+  ws.onclose=()=>{ if(everOpen){ setState('off'); setTimeout(connect,1500); } };
+  ws.onerror=()=>{};
+}
+document.getElementById('connect').onclick=()=>{ stopSim(); connect(); };
+addEventListener('resize',()=>{wave.resize();cad.resize();board.resize();gauge.resize();radar.resize();
+  Object.values(walkers).forEach(w=>w._g&&w._g.resize());});
+connect();
+</script>
+</body>
+</html>

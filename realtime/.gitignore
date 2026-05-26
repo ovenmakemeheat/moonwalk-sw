@@ -1,0 +1,6 @@
+# local dev cruft — not part of the demo
+.venv/
+__pycache__/
+*.pyc
+_site/
+.DS_Store

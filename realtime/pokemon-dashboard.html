@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Moon Walk — Walk Buddies</title>
+<style>
+  :root{
+    --bg:#0b1020;--panel:#141d30;--panel2:#0f1726;--line:#26334d;--text:#eef4fb;
+    --muted:#9fb3c9;--accent:#a78bfa;--teal:#34d399;--amber:#f6b352;--red:#f87171;
+    --lcd:#9bbc6c;--lcd-dark:#0f380f; /* Game Boy LCD greens */
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,#1a2440 0,var(--bg) 55%);
+    color:var(--text);font:17px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:24px 20px 70px}
+  header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+  .logo{font-size:26px;font-weight:800}.logo .moon{color:var(--accent)}
+  .tag{color:var(--muted);font-style:italic;font-size:15px}
+  .status{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+  .led{width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red)}
+  input.ws{background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    border-radius:8px;padding:5px 9px;font-size:13px;width:185px}
+  button{background:var(--accent);color:#0b1020;border:0;border-radius:8px;padding:6px 13px;
+    font-weight:700;cursor:pointer;font-size:13px}
+  .intro{color:var(--text);font-size:18px;margin:8px 0 4px;font-weight:600}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 20px}
+
+  /* ---- buddy grid ---- */
+  .buddies{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+  .buddy{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
+    border-radius:20px;padding:18px 18px 20px;box-shadow:0 12px 34px rgba(0,0,0,.4);
+    transition:box-shadow .4s ease,border-color .4s ease}
+  .buddy .name{display:flex;align-items:center;gap:8px;font-weight:800;font-size:19px;margin:0 0 10px}
+  .buddy .name .who{color:var(--muted);font-weight:600;font-size:14px;margin-left:auto}
+
+  /* ---- Pokédex LCD screen ---- */
+  .screen{position:relative;height:208px;border-radius:16px;overflow:hidden;
+    background:var(--lcd);
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.35),inset 0 -10px 24px rgba(0,0,0,.18),0 0 0 4px #1b2740;
+    display:flex;align-items:center;justify-content:center;transition:background .6s ease,box-shadow .6s ease}
+  .screen::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg,rgba(0,0,0,.06) 0 2px,transparent 2px 4px)} /* scanlines */
+  .sprite{height:150px;width:auto;image-rendering:pixelated;image-rendering:crisp-edges;
+    mix-blend-mode:multiply;filter:contrast(1.05);transform-origin:center bottom;position:relative;z-index:2}
+  .emote{position:absolute;top:14px;right:16px;width:44px;height:44px;image-rendering:pixelated;
+    z-index:3;opacity:0;transform:scale(.4) translateY(6px);transition:opacity .3s,transform .3s}
+  .emote.on{opacity:1;transform:scale(1) translateY(0)}
+  .zzz{position:absolute;top:20px;right:26px;z-index:3;color:var(--lcd-dark);font-weight:800;
+    font-size:22px;opacity:0;letter-spacing:2px}
+  .zzz.on{animation:zzz 3s ease-in-out infinite}
+  @keyframes zzz{0%{opacity:0;transform:translate(0,8px) scale(.7)}30%{opacity:.85}
+    100%{opacity:0;transform:translate(14px,-26px) scale(1.3)}}
+  .sparkle{position:absolute;z-index:3;font-size:18px;opacity:0;pointer-events:none}
+  .thrilled .sparkle{animation:spk 1.2s ease-in-out infinite}
+  .sparkle.s2{animation-delay:.4s}.sparkle.s3{animation-delay:.8s}
+  @keyframes spk{0%,100%{opacity:0;transform:scale(.5)}50%{opacity:1;transform:scale(1.15)}}
+
+  /* mood sprite animations */
+  .asleep .sprite{animation:breathe 4s ease-in-out infinite;filter:grayscale(.4) brightness(.92)}
+  .sad   .sprite{animation:droop 3.4s ease-in-out infinite;filter:saturate(.8)}
+  .okay  .sprite{animation:sway 2.6s ease-in-out infinite}
+  .happy .sprite{animation:bounce var(--bounce,1s) ease-in-out infinite}
+  .thrilled .sprite{animation:bounce var(--bounce,.7s) cubic-bezier(.5,0,.5,1) infinite}
+  @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+  @keyframes droop{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(5px) rotate(-1.5deg)}}
+  @keyframes sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+  @keyframes bounce{0%,100%{transform:translateY(0) scaleY(1)}
+    20%{transform:translateY(0) scaleY(.92)}50%{transform:translateY(-22px) scaleY(1.05)}
+    80%{transform:translateY(0) scaleY(.96)}}
+
+  .pick{display:flex;align-items:center;gap:8px;margin:12px 0 6px}
+  .pick label{color:var(--muted);font-size:13px}
+  select{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    border-radius:9px;padding:7px 9px;font-size:14px}
+
+  .scorerow{display:flex;align-items:baseline;gap:10px;margin-top:6px}
+  .score{font-size:40px;font-weight:800;line-height:1}
+  .score small{font-size:14px;color:var(--muted);font-weight:600}
+  .moodlbl{margin-left:auto;font-weight:700;font-size:15px;padding:3px 11px;border-radius:999px}
+  .bar{height:12px;border-radius:999px;background:#22304a;overflow:hidden;margin:10px 0 4px}
+  .bar>div{height:100%;border-radius:999px;width:0;transition:width .5s ease,background .5s ease}
+  .msg{font-size:15px;line-height:1.5;min-height:44px;margin:6px 0 8px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{font-size:12.5px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);
+    border-radius:999px;padding:3px 11px}.chip b{color:var(--text)}
+
+  /* ---- movers leaderboard ---- */
+  .movers{margin-top:26px;background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--line);border-radius:18px;padding:18px 20px}
+  .movers h2{margin:0 0 2px;font-size:17px}.movers .hint{color:var(--muted);font-size:13px;margin:0 0 12px}
+  .mrow{display:flex;align-items:center;gap:12px;padding:9px 8px;border-radius:12px}
+  .mrow+.mrow{margin-top:4px}.mrow:nth-child(odd){background:rgba(255,255,255,.02)}
+  .rank{font-size:20px;width:30px;text-align:center}
+  .mface{width:40px;height:40px;background:var(--lcd);border-radius:8px;display:flex;align-items:center;
+    justify-content:center;overflow:hidden;flex:0 0 auto}
+  .mface img{height:34px;image-rendering:pixelated;mix-blend-mode:multiply}
+  .minfo{flex:1}.minfo b{font-size:15px}.minfo span{color:var(--muted);font-size:13px;margin-left:8px}
+  .mscore{font-weight:800;font-size:20px}
+
+  .footer{margin-top:24px;padding:11px 16px;border:1px dashed var(--line);border-radius:12px;
+    color:var(--muted);font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <span class="logo"><span class="moon">◗</span> Moon Walk</span>
+    <span class="tag">Walk Buddies — keep your Pokémon happy by moving.</span>
+    <span class="status">
+      <input class="ws" id="wsurl" value="ws://localhost:8765" />
+      <button id="connect">Connect</button>
+      <span class="led" id="led"></span><span id="statetxt">disconnected</span>
+    </span>
+  </header>
+  <div class="intro">🐾 Pick a buddy. The more you walk, the happier it gets!</div>
+  <div class="sub">Each walker's Moon Walk Score — built live from their own movement — sets their Pokémon's mood. It's about <b>you vs. yesterday</b>, never a contest of who walks best.</div>
+
+  <div class="buddies" id="buddies"></div>
+
+  <section class="movers">
+    <h2>🌟 Today's Movers</h2>
+    <p class="hint">Everyone who got moving today — cheering each other on.</p>
+    <div id="movers"></div>
+  </section>
+
+  <div class="footer">⚕ MEDICAL CLAIM SAFETY — Moon Walk is a wellness &amp; motivation companion, not a medical assessment. It does not diagnose, treat, or predict. Pokémon moods are encouragement, not a health rating.</div>
+</div>
+
+<script>
+// ============ assets ============
+const POKEMON=[
+  {id:'pikachu',   name:'Pikachu',    glow:[246,215,67]},
+  {id:'bulbasaur', name:'Bulbasaur',  glow:[95,191,143]},
+  {id:'charmander',name:'Charmander', glow:[246,145,78]},
+  {id:'squirtle',  name:'Squirtle',   glow:[91,155,213]},
+  {id:'jigglypuff',name:'Jigglypuff', glow:[246,168,208]},
+  {id:'meowth',    name:'Meowth',     glow:[232,192,105]},
+  {id:'psyduck',   name:'Psyduck',    glow:[246,215,67]},
+  {id:'eevee',     name:'Eevee',      glow:[199,154,91]},
+  {id:'mew',       name:'Mew',        glow:[246,168,208]},
+  {id:'gengar',    name:'Gengar',     glow:[155,107,208]},
+  {id:'charizard', name:'Charizard',  glow:[246,145,78]},
+  {id:'snorlax',   name:'Snorlax',    glow:[91,127,166]},
+];
+const POKE_BY={};POKEMON.forEach(p=>POKE_BY[p.id]=p);
+const spritePath=id=>'assets/pokemon/'+id+'.png';
+const emotePath =n =>'assets/emotes/'+n+'.png';
+
+// ============ score -> mood ============
+// 5 moods, always-positive copy that nudges toward more movement.
+const MOODS=[
+  {key:'asleep',  min:0,  label:'Asleep',   color:'#7c8aa0', screen:[120,130,120],
+   emote:null, msg:n=>`${n} is fast asleep 💤  A gentle walk will wake it up.`},
+  {key:'sad',     min:14, label:'Sleepy',   color:'#9cc4ee', screen:[150,170,150],
+   emote:'question', msg:n=>`${n} is a little sleepy. A few steps will cheer it right up!`},
+  {key:'okay',    min:35, label:'Warming up',color:'#f6b352', screen:[165,190,120],
+   emote:null, msg:n=>`${n} is warming up — you're doing great. Keep going!`},
+  {key:'happy',   min:60, label:'Happy',    color:'#34d399', screen:[170,205,108],
+   emote:'happy', msg:n=>`${n} is happy! You're moving wonderfully today.`},
+  {key:'thrilled',min:80, label:'Thrilled!',color:'#a78bfa', screen:[185,222,120],
+   emote:'happy', msg:n=>`${n} is thrilled! 🎉 Amazing walking — you made its day!`},
+];
+function moodFor(score){let m=MOODS[0];for(const x of MOODS)if(score>=x.min)m=x;return m;}
+const HAPPY_AT=60; // score that makes the buddy happy — the gentle goal
+
+// ============ walker data model (same shape as main dashboard) ============
+const WAVE_N=300, CAD_WIN=30000;
+const walkers={};            // id -> {wave:[], cad:[[t,v]], cadence, cycles, _score, poke, _card}
+const order=[];
+const clamp=x=>Math.max(0,Math.min(100,x));
+
+function ensure(id){
+  if(!walkers[id]){
+    const saved=localStorage.getItem('mw-buddy-'+id);
+    const poke=POKE_BY[saved]?saved:POKEMON[order.length%POKEMON.length].id;
+    walkers[id]={wave:[],cad:[],cadence:0,cycles:0,_score:0,poke,_card:null};
+    order.push(id);
+    buildCard(id);
+  }
+  return walkers[id];
+}
+
+// Moon Walk Score (0-100) — same blend as the main dashboard.
+function computeScore(w){
+  const cv0=w.cad.map(p=>p[1]).filter(x=>x>0);
+  const m=cv0.length?cv0.reduce((a,b)=>a+b,0)/cv0.length:0;
+  const sd=cv0.length?Math.sqrt(cv0.reduce((a,b)=>a+(b-m)*(b-m),0)/cv0.length):0;
+  const cv=m?sd/m:0;
+  let mn=1e9,mx=-1e9,plant=0,moving=0; const wv=w.wave;
+  wv.forEach(v=>{if(v<mn)mn=v;if(v>mx)mx=v;const a=Math.abs(v);if(a<22)plant++;if(a>40)moving++;});
+  const swing=wv.length?(mx-mn)/2:0, mf=wv.length?moving/wv.length:0;
+  const cadence=clamp((m-30)/35*100), rhythm=clamp(100-cv*700);
+  const endurance=clamp(w.cycles/40*100), activity=clamp(mf*140), sw=clamp(swing/160*100);
+  w._score=Math.round(clamp(0.30*rhythm+0.20*cadence+0.20*endurance+0.15*activity+0.15*sw));
+}
+
+// ============ card DOM ============
+function buildCard(id){
+  const host=document.getElementById('buddies');
+  const w=walkers[id];
+  const card=document.createElement('div');card.className='buddy';
+  card.innerHTML=`
+    <div class="name"><span class="dot">🎮</span><span class="pname"></span>
+      <span class="who">Walker ${id}</span></div>
+    <div class="screen">
+      <img class="sprite" alt="" />
+      <img class="emote" alt="" />
+      <span class="zzz">z</span>
+      <span class="sparkle" style="top:18px;left:20px">✨</span>
+      <span class="sparkle s2" style="top:30px;right:22px">✨</span>
+      <span class="sparkle s3" style="bottom:24px;left:34px">⭐</span>
+    </div>
+    <div class="pick"><label for="sel-${id}">Buddy:</label>
+      <select id="sel-${id}" aria-label="Choose buddy Pokémon for Walker ${id}">${POKEMON.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}</select>
+    </div>
+    <div class="scorerow">
+      <div class="score"><span class="sval">0</span><small> / 100</small></div>
+      <span class="moodlbl"></span>
+    </div>
+    <div class="bar"><div class="barfill"></div></div>
+    <div class="msg"></div>
+    <div class="chips">
+      <span class="chip">cadence <b class="ccad">–</b> /min</span>
+      <span class="chip">cycles <b class="ccyc">0</b></span>
+      <span class="chip goal">goal <b>make ${'$'}{name} happy</b></span>
+    </div>`;
+  host.appendChild(card);
+  const sel=card.querySelector('select');
+  sel.value=w.poke;
+  sel.onchange=e=>{w.poke=e.target.value;localStorage.setItem('mw-buddy-'+id,w.poke);renderCard(id);};
+  w._card={el:card, screen:card.querySelector('.screen'), sprite:card.querySelector('.sprite'),
+    emote:card.querySelector('.emote'), zzz:card.querySelector('.zzz'),
+    pname:card.querySelector('.pname'), sval:card.querySelector('.sval'),
+    moodlbl:card.querySelector('.moodlbl'), barfill:card.querySelector('.barfill'),
+    msg:card.querySelector('.msg'), ccad:card.querySelector('.ccad'),
+    ccyc:card.querySelector('.ccyc'), goal:card.querySelector('.goal'),
+    _moodKey:null, _poke:null};
+  renderCard(id);
+}
+
+function renderCard(id){
+  const w=walkers[id], c=w._card; if(!c) return;
+  const poke=POKE_BY[w.poke], score=w._score, mood=moodFor(score);
+
+  if(c._poke!==w.poke){ c.sprite.src=spritePath(w.poke); c.pname.textContent=poke.name; c._poke=w.poke; }
+
+  // mood class on the screen drives all sprite animations
+  if(c._moodKey!==mood.key){
+    c.screen.className='screen '+mood.key;
+    c._moodKey=mood.key;
+    // emote bubble
+    if(mood.emote){ c.emote.src=emotePath(mood.emote); c.emote.classList.add('on'); }
+    else c.emote.classList.remove('on');
+    c.zzz.classList.toggle('on',mood.key==='asleep');
+  }
+  // bounce speed reflects live cadence (faster steps -> peppier buddy)
+  const cad=w.cadence||0;
+  c.sprite.style.setProperty('--bounce',(cad>0?Math.max(0.45,1.6-cad/55):1)+'s');
+
+  // screen tint = blend of mood warmth + the buddy's signature colour
+  const [sr,sg,sb]=mood.screen, [pr,pg,pb]=poke.glow, mix=score>=HAPPY_AT?0.22:0.10;
+  const r=Math.round(sr*(1-mix)+pr*mix),g=Math.round(sg*(1-mix)+pg*mix),b=Math.round(sb*(1-mix)+pb*mix);
+  c.screen.style.background=`rgb(${r},${g},${b})`;
+  c.screen.style.boxShadow=
+    `inset 0 2px 0 rgba(255,255,255,.35),inset 0 -10px 24px rgba(0,0,0,.18),`+
+    `0 0 0 4px #1b2740, 0 0 ${score>=HAPPY_AT?34:10}px rgba(${pr},${pg},${pb},${score/200+0.1})`;
+  c.el.style.borderColor=score>=HAPPY_AT?`rgba(${pr},${pg},${pb},.6)`:'var(--line)';
+
+  // numbers + copy
+  c.sval.textContent=score;
+  c.moodlbl.textContent=mood.label;
+  c.moodlbl.style.background=mood.color+'22'; c.moodlbl.style.color=mood.color;
+  c.moodlbl.style.border='1px solid '+mood.color+'88';
+  c.barfill.style.width=score+'%'; c.barfill.style.background=mood.color;
+  c.msg.textContent=mood.msg(poke.name);
+  c.ccad.textContent=cad?Math.round(cad):'–';
+  c.ccyc.textContent=w.cycles;
+  if(score>=HAPPY_AT){ c.goal.innerHTML=`<b style="color:var(--teal)">${poke.name} is happy! 💚</b>`; }
+  else { c.goal.innerHTML=`<b>${HAPPY_AT-score} more to make ${poke.name} happy</b>`; }
+}
+
+// ============ movers leaderboard ============
+const MEDAL=['🥇','🥈','🥉'];
+function renderMovers(){
+  const host=document.getElementById('movers');
+  const rows=order.map(id=>({id,s:walkers[id]._score,poke:walkers[id].poke}))
+    .sort((a,b)=>b.s-a.s);
+  host.innerHTML=rows.map((r,i)=>{
+    const mood=moodFor(r.s), name=POKE_BY[r.poke].name;
+    return `<div class="mrow">
+      <div class="rank">${MEDAL[i]||'🐾'}</div>
+      <div class="mface"><img src="${spritePath(r.poke)}" alt=""></div>
+      <div class="minfo"><b>Walker ${r.id}</b><span>${name} · ${mood.label}</span></div>
+      <div class="mscore" style="color:${mood.color}">${r.s}</div>
+    </div>`;
+  }).join('') || '<div class="hint">Waiting for walkers to start moving…</div>';
+}
+
+// ============ render loop ============
+let lastCompute=0;
+function loop(){
+  const now=performance.now();
+  if(now-lastCompute>400){
+    order.forEach(id=>{computeScore(walkers[id]);renderCard(id);});
+    renderMovers();
+    lastCompute=now;
+  } else {
+    // light-touch updates every frame: cadence chip + bounce speed
+    order.forEach(id=>{const c=walkers[id]._card; if(!c)return;
+      const cad=walkers[id].cadence||0;
+      c.ccad.textContent=cad?Math.round(cad):'–';
+      c.sprite.style.setProperty('--bounce',(cad>0?Math.max(0.45,1.6-cad/55):1)+'s');});
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// ============ message handling (shared by live socket + simulated fallback) ============
+function handleMsg(m){
+  if(m.type==='sample'){const w=ensure(m.walker);w.wave.push(m.gz);if(w.wave.length>WAVE_N)w.wave.shift();}
+  else if(m.type==='metrics'){const w=ensure(m.walker);w.cadence=m.cadence;w.cycles=m.cycles;
+    w.cad.push([m.t,m.cadence]);const cut=m.t-CAD_WIN;while(w.cad.length&&w.cad[0][0]<cut)w.cad.shift();}
+  else if(m.type==='roster'){(m.walkers||[]).forEach(id=>ensure(id));}
+}
+function setState(mode){
+  const led=document.getElementById('led'), tx=document.getElementById('statetxt');
+  const c=mode==='live'?'var(--teal)':mode==='sim'?'var(--amber)':'var(--red)';
+  led.style.background=c; led.style.boxShadow='0 0 8px '+c;
+  tx.textContent=mode==='live'?'live · hub':mode==='sim'?'simulated · demo data':'disconnected';
+}
+
+// ============ in-browser simulated feed (used when no hub is reachable, e.g. hosted) ============
+let simTimer=null;
+function startSim(){
+  if(simTimer) return;
+  setState('sim');
+  const PRELOAD=CAD_WIN;
+  const W=[{id:'A',amp:140,base:64,ph:0},{id:'B',amp:135,base:50,ph:1.7},{id:'C',amp:120,base:30,ph:3.1}]
+    .map(w=>Object.assign(w,{lastCad:w.base}));  // A thriving, B happy, C just getting going
+  const cadAt=(w,sec)=>w.base+4*Math.sin(sec/7);
+  handleMsg({type:'roster',walkers:W.map(w=>w.id)});
+  W.forEach(w=>{
+    const wk=ensure(w.id);
+    for(let T=0;T<=PRELOAD;T+=250) wk.cad.push([T, Math.round(cadAt(w,T/1000)*10)/10]);
+    for(let i=0;i<WAVE_N;i++){
+      const sec=(PRELOAD-(WAVE_N-i)*20)/1000, f=cadAt(w,sec)/60;
+      wk.wave.push(Math.round((w.amp*Math.sin(2*Math.PI*f*sec+w.ph)+(Math.random()*14-7))*10)/10);
+    }
+    w.cycAcc=w.base/60*(PRELOAD/1000);
+    wk.cadence=Math.round(cadAt(w,PRELOAD/1000)*10)/10; wk.cycles=Math.floor(w.cycAcc);
+  });
+  const t0=performance.now(); let k=0;
+  simTimer=setInterval(()=>{
+    const sec=(performance.now()-t0)/1000+PRELOAD/1000, nowMs=Math.round(sec*1000); k++;
+    W.forEach(w=>{
+      const cad=cadAt(w,sec); w.lastCad=cad;
+      const f=cad/60, v=w.amp*Math.sin(2*Math.PI*f*sec+w.ph)+(Math.random()*14-7);
+      handleMsg({type:'sample',walker:w.id,t:nowMs,gz:Math.round(v*10)/10});
+    });
+    if(k%12===0) W.forEach(w=>{ w.cycAcc+=w.lastCad*(0.24/60);
+      handleMsg({type:'metrics',walker:w.id,t:nowMs,cadence:Math.round(w.lastCad*10)/10,cycles:Math.floor(w.cycAcc)});});
+  },20);
+}
+function stopSim(){ if(simTimer){clearInterval(simTimer);simTimer=null;} }
+
+// ============ websocket (prefers a real hub; falls back to the simulated feed) ============
+let ws=null, everOpen=false, fbTimer=null;
+function connect(){
+  const url=document.getElementById('wsurl').value.trim();
+  if(ws){try{ws.close()}catch(e){}}
+  everOpen=false; clearTimeout(fbTimer);
+  fbTimer=setTimeout(()=>{ if(!everOpen) startSim(); }, 2500);
+  try{ ws=new WebSocket(url); }
+  catch(e){ startSim(); return; }
+  ws.onopen=()=>{ everOpen=true; clearTimeout(fbTimer); stopSim(); setState('live'); };
+  ws.onmessage=e=>handleMsg(JSON.parse(e.data));
+  ws.onclose=()=>{ if(everOpen){ setState('off'); setTimeout(connect,1500); } };
+  ws.onerror=()=>{};
+}
+document.getElementById('connect').onclick=()=>{ stopSim(); connect(); };
+connect();
+</script>
+</body>
+</html>

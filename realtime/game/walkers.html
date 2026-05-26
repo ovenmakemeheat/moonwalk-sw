@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Moon Walk · Walk Buddies — Arenas</title>
+<style>
+  :root{ --gb0:#9bbc0f; --gb1:#8bac0f; --gb2:#306230; --gb3:#0f380f; --panel:#c4cfa1; --ink:#0f380f; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Courier New",monospace;background:#13200d;color:var(--ink);min-height:100vh}
+
+  header{display:flex;align-items:center;gap:14px;padding:9px 16px;background:var(--gb3);
+         color:var(--gb0);border-bottom:3px solid var(--gb2);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+  header h1{font-size:16px;margin:0;letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
+  header h1 small{display:block;font-size:9px;opacity:.7;letter-spacing:2px}
+  .state{display:flex;align-items:center;gap:6px;font-size:11px}
+  .led{width:10px;height:10px;border-radius:50%;background:#666;box-shadow:0 0 6px #666}
+  .spacer{flex:1}
+  header input{font:inherit;font-size:11px;width:150px;padding:3px 6px;border:2px solid var(--gb1);
+         background:var(--gb3);color:var(--gb0);border-radius:3px}
+  header button,.toggle{font:inherit;font-size:11px;font-weight:bold;padding:5px 11px;cursor:pointer;
+         border:2px solid var(--gb0);background:var(--gb2);color:var(--gb0);border-radius:4px}
+  .toggle.on{background:var(--gb0);color:var(--gb3)}
+
+  .legend{font-size:11px;color:var(--gb0);background:#1c2a12;padding:7px 16px;opacity:.85;line-height:1.4}
+
+  #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;padding:16px}
+  .card{background:var(--panel);border:3px solid var(--gb2);border-radius:12px;padding:11px;
+        box-shadow:0 4px 0 #0c1408}
+  .chead{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .chead .who{font-weight:bold;font-size:14px;flex:1}
+  .chead .mood{font-size:10px;background:var(--gb2);color:var(--gb0);padding:2px 7px;border-radius:8px}
+  .lv{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;
+      background:var(--gb3);color:var(--gb0);border-radius:8px;font-weight:bold;font-size:13px;
+      border:2px solid var(--gb0);padding:0 5px}
+  .lv::before{content:"Lv";font-size:8px;margin-right:2px;opacity:.7}
+
+  .arena{width:100%;aspect-ratio:5/4;background:#0f380f;border:3px solid var(--gb3);border-radius:8px;
+         overflow:hidden;image-rendering:pixelated}
+  .arena canvas{display:block;width:100%!important;height:100%!important}
+
+  .energy{position:relative;height:18px;margin:9px 0 4px;background:var(--gb3);border-radius:9px;
+          overflow:hidden;border:2px solid var(--gb2)}
+  .energy .efill{height:100%;width:0;background:linear-gradient(90deg,var(--gb1),var(--gb0));
+          transition:width .2s linear;box-shadow:0 0 8px var(--gb0)}
+  .energy .elabel{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+          font-size:9px;font-weight:bold;letter-spacing:2px;color:var(--gb3);mix-blend-mode:hard-light}
+
+  .srow{display:flex;align-items:baseline;gap:6px;margin:6px 0}
+  .srow .score{font-size:22px;font-weight:bold;line-height:1}
+  .srow small{font-size:10px;opacity:.7}
+  .srow .moodchip{margin-left:auto;font-size:10px;background:var(--gb0);border:1px solid var(--gb2);
+          padding:1px 7px;border-radius:8px}
+
+  .dlg{background:var(--gb0);border:2px solid var(--gb3);border-radius:8px;padding:8px 10px;
+       font-size:12px;min-height:42px;line-height:1.35;margin-bottom:8px}
+  .dlg.lvup{background:var(--gb3);color:var(--gb0);font-weight:bold}
+
+  .pick{display:flex;align-items:center;gap:8px;font-size:11px}
+  .pick select{font:inherit;font-size:11px;flex:1;padding:3px;border:1px solid var(--gb2);
+          background:#dfe7c0;color:var(--gb3);border-radius:4px}
+
+  footer{font-size:9px;padding:8px 16px;background:var(--gb3);color:var(--gb0);opacity:.85;text-align:center}
+</style>
+</head>
+<body>
+  <header>
+    <h1>Walk Buddies · Arenas<small>moon walk × pokémon</small></h1>
+    <div class="state"><span class="led" id="led"></span><span id="statetxt">connecting…</span></div>
+    <span class="spacer"></span>
+    <input class="ws" id="wsurl" value="ws://localhost:8765" aria-label="Hub WebSocket URL" />
+    <button id="connect">Connect</button>
+    <button class="toggle" id="trainbtn" aria-pressed="false">🎓 Training: <span id="trainstate">Off</span></button>
+  </header>
+
+  <div class="legend">
+    🐾 Every walker has their own world. Keep moving to fill the <b>MOVE</b> bar — sit still and it drains.
+    Fill it to the end to <b>Level Up!</b> Your buddy's mood &amp; movement follow your Moon Walk Score.
+  </div>
+
+  <div id="grid"></div>
+
+  <footer>⚕ Moon Walk is a wellness &amp; motivation companion, not a medical assessment. It does not diagnose, treat, or predict. Levels &amp; moods are encouragement, not a health rating — always relative to your own movement.</footer>
+
+<script src="vendor/phaser.min.js"></script>
+<script src="game.js"></script>
+<script src="walkers.js"></script>
+<script>
+  // game.js exposes setState/trainingMode hooks; wire the header here.
+  window.trainingMode = false;
+  window.setState = function(mode){
+    const led = document.getElementById('led'), tx = document.getElementById('statetxt');
+    const c = mode==='live' ? '#9bbc0f' : mode==='sim' ? '#e0c000' : '#d05050';
+    led.style.background = c; led.style.boxShadow = '0 0 8px ' + c;
+    tx.textContent = mode==='live' ? 'live · hub' : mode==='sim' ? 'simulated · demo data' : 'disconnected';
+  };
+  document.getElementById('trainbtn').onclick = function(){
+    window.trainingMode = !window.trainingMode;
+    this.classList.toggle('on', window.trainingMode);
+    this.setAttribute('aria-pressed', String(window.trainingMode));
+    document.getElementById('trainstate').textContent = window.trainingMode ? 'On' : 'Off';
+  };
+  document.getElementById('connect').onclick = () => connect();
+
+  // there is no shared World scene here, so kick off the data feed directly
+  connect();
+</script>
+</body>
+</html>
