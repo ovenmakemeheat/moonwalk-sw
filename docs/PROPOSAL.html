@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Moon Walk — Proposal</title>
+<style>
+  @page{size:A4;margin:14mm 15mm}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font:11px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    color:#1b2330}
+  .doc{max-width:720px;margin:0 auto}
+  h1{font-size:21px;margin:0 0 2px;letter-spacing:.2px}
+  h1 .moon{color:#7c5cff}
+  h1 .tag{font-weight:400;font-style:italic;color:#5b6675;font-size:15px}
+  .demo{display:flex;justify-content:space-between;align-items:center;gap:10px;
+    background:#f3f0ff;border:1px solid #ddd5ff;border-radius:8px;padding:7px 11px;margin:8px 0 12px}
+  .demo a{color:#5b3ee6;font-weight:700;text-decoration:none}
+  .demo .note{color:#6b7585;font-size:10px}
+  h2{font-size:12.5px;margin:13px 0 4px;color:#2a3550;
+    border-bottom:1px solid #e6e9ef;padding-bottom:2px}
+  p{margin:4px 0}
+  ul{margin:4px 0;padding-left:16px}
+  li{margin:3px 0}
+  b,strong{color:#101725}
+  .pill{display:inline-block;font-size:9px;letter-spacing:.4px;text-transform:uppercase;
+    color:#6b7585;border:1px solid #d6dbe4;border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:middle}
+  .oneline{margin-top:12px;padding:9px 12px;background:#0f1726;color:#e7eef7;border-radius:8px;
+    font-size:11px;line-height:1.5}
+  .oneline b{color:#fff}
+  .foot{margin-top:10px;color:#6b7585;font-size:9.5px;text-align:center;
+    border-top:1px dashed #d6dbe4;padding-top:6px}
+  a{color:#5b3ee6}
+</style>
+</head>
+<body>
+<div class="doc">
+  <h1><span class="moon">◗</span> Moon Walk — <span class="tag">WHOOP for your walking aid.</span>
+    <span class="pill">Wellness, not medicine</span></h1>
+
+  <div class="demo">
+    <span>Live demo → <a href="https://moonwalkerscamper.netlify.app">moonwalkerscamper.netlify.app</a></span>
+    <span class="note">Does not diagnose, treat, or predict.</span>
+  </div>
+
+  <p>A clip-on sensor that turns the cane or walker someone <b>already uses</b> into a gait
+  instrument. Like a WHOOP for the way you walk, it does two things: it <b>tracks</b> how you
+  normally walk and notices when that changes, and it <b>coaches</b> your rhythm in real time
+  when you ask it to.</p>
+
+  <h2>The problem</h2>
+  <p>Millions walk with a cane or rollator because of a condition that changes over time —
+  stroke recovery, Parkinson's, ageing, post-surgery rehab. <b>Nobody is watching the trend.</b>
+  Subtle decline creeps in unnoticed; rehab progress goes uncelebrated; and by the next clinic
+  visit nobody remembers how the walking changed. People have no objective, continuous picture
+  of their own gait.</p>
+
+  <h2>The solution — two pillars</h2>
+  <ul>
+    <li><b>Track — know your normal, notice the change.</b> Moon Walk clips onto the <b>Host
+    Aid</b>, continuously measures <b>Gait</b> (cadence, rhythm, loading, symmetry, stride
+    trends), learns that person's normal <b>Baseline</b> <i>on-device</i>, and watches for
+    sustained <b>Drift</b>. When walking meaningfully changes it raises a gentle wellness
+    <b>Alert</b> — <i>"your walking has changed; you may want to mention it to your doctor."</i>
+    Awareness, not a diagnosis.</li>
+    <li><b>Coach — improve your rhythm in the moment.</b> Opt into <b>Training Mode</b> for
+    real-time <b>Coaching Cues</b> — biofeedback by <b>voice, vibration, or LED</b> — guiding
+    you toward <i>your own</i> target rhythm, like a running-cadence coach. Coaching, not
+    correction: opt-in, never names a condition, <i>not</i> therapy.</li>
+  </ul>
+
+  <h2>The live demo — multi-user, real-time</h2>
+  <p>Guests each walk a short course wearing a Nano 33 BLE. The IMU streams over <b>BLE → a
+  local hub → the dashboard</b> (gait data stays local, never the cloud), which plots
+  <b>every walker live and side by side</b>: a real-time signal trace, a live <b>cadence
+  comparison</b>, and a leaderboard — then <b>Training Mode</b> coaches a chosen walker with
+  voice/vibration/LED. Try it: <a href="https://moonwalkerscamper.netlify.app">moonwalkerscamper.netlify.app</a></p>
+
+  <h2>Why it's different</h2>
+  <p>The 2014 "Smart Walker" <i>replaced</i> the aid and streamed raw video to the cloud to
+  navigate. Moon Walk <b>instruments the aid you own</b>, keeps the <b>intelligence and health
+  data on-device</b>, and makes an <b>honest wellness claim</b> — no overclaim. Gait sensors on
+  a walking aid track <i>change</i> reliably (temporal metrics ICC 0.72–0.97), so we lead with
+  temporal numbers and show stride/velocity only as <b>relative trends</b>, never clinical
+  absolutes.</p>
+
+  <h2>Honest scope</h2>
+  <ul>
+    <li>Not a medical device — no diagnosis, treatment, disease/fall-risk prediction; a
+    clinician, never the device, interprets data.</li>
+    <li><b>Hardware in hand is IMU-only</b> (LSM9DS1): all six gait metrics derive from the
+    IMU; loading/asymmetry (force sensor) and the <b>Speaking Stick</b> see-and-speak layer
+    are on the roadmap, not in this build.</li>
+    <li>Health data stays on the device and laptop; nothing is sent to the cloud.</li>
+  </ul>
+
+  <div class="oneline"><b>In one line:</b> Moon Walk — WHOOP for your walking aid: clip it onto
+  the cane or walker you already use, and it tracks your normal, tells you when your walking
+  changes, and coaches your rhythm in real time — all without sending your health to the cloud.</div>
+
+  <div class="foot">⚕ MEDICAL CLAIM SAFETY — Moon Walk is a wellness awareness cue, not a medical assessment.</div>
+</div>
+</body>
+</html>

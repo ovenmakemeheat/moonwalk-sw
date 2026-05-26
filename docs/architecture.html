@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moon Walk — Gait-Sensing Architecture (IMU-only build)</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --panel: #141b30;
+    --panel-2: #1b2440;
+    --ink: #e7ecf5;
+    --muted: #9aa7c2;
+    --line: #2c3a5e;
+    --nano: #4fd1c5;
+    --uno: #f6ad55;
+    --phone: #b794f4;
+    --t1: #68d391;
+    --t2: #f6ad55;
+    --future: #7c89a8;
+    --accent: #5b8def;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+  header.title { text-align: center; margin-bottom: 8px; }
+  h1 { font-size: 2.1rem; margin: 0 0 6px; letter-spacing: -0.02em; }
+  .sub { color: var(--muted); font-size: 1.02rem; margin: 0 auto 18px; max-width: 740px; text-align: center; }
+  .pill {
+    display: inline-block; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted);
+  }
+  .banner {
+    max-width: 760px; margin: 0 auto 10px; background: color-mix(in srgb, var(--nano) 10%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--nano) 40%, var(--line)); border-radius: 12px;
+    padding: 13px 18px; font-size: .9rem; color: var(--ink);
+  }
+  .banner b { color: var(--nano); }
+  h2 {
+    font-size: 1.35rem; margin: 46px 0 14px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--line); letter-spacing: -0.01em;
+  }
+  h2 .num { color: var(--accent); margin-right: 10px; font-variant-numeric: tabular-nums; }
+  p.lead { color: var(--muted); margin-top: 0; }
+
+  .pipeline { display: flex; flex-direction: column; gap: 0; align-items: stretch; }
+  .layer {
+    border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 20px;
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    position: relative; margin: 0;
+  }
+  .layer + .layer { margin-top: 34px; }
+  .layer .tag {
+    position: absolute; top: -12px; left: 18px; font-size: .72rem; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase; padding: 3px 12px; border-radius: 999px;
+    background: var(--bg); border: 1px solid var(--line);
+  }
+  .layer.nano { border-color: color-mix(in srgb, var(--nano) 50%, var(--line)); }
+  .layer.nano .tag { color: var(--nano); border-color: color-mix(in srgb, var(--nano) 55%, var(--line)); }
+  .layer.uno { border-color: color-mix(in srgb, var(--uno) 45%, var(--line)); }
+  .layer.uno .tag { color: var(--uno); border-color: color-mix(in srgb, var(--uno) 55%, var(--line)); }
+  .layer.phone { border-color: color-mix(in srgb, var(--phone) 45%, var(--line)); }
+  .layer.phone .tag { color: var(--phone); border-color: color-mix(in srgb, var(--phone) 55%, var(--line)); }
+  .layer h3 { margin: 6px 0 14px; font-size: 1.02rem; color: var(--muted); font-weight: 600; }
+
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .row.center { justify-content: center; }
+  .node {
+    flex: 1 1 180px; min-width: 150px; background: #0f1626; border: 1px solid var(--line);
+    border-radius: 10px; padding: 11px 13px;
+  }
+  .node .nm { font-weight: 700; font-size: .95rem; }
+  .node .dl { color: var(--muted); font-size: .82rem; margin-top: 3px; }
+  .node.deep { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent); }
+  .node.deep .nm::after {
+    content: "deep"; font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--accent); border: 1px solid color-mix(in srgb,var(--accent) 45%, var(--line));
+    border-radius: 6px; padding: 1px 6px; margin-left: 8px; vertical-align: middle;
+  }
+  .node.sensor { background: #102019; border-color: color-mix(in srgb, var(--nano) 40%, var(--line)); }
+  .node.future {
+    background: repeating-linear-gradient(45deg, #0f1626, #0f1626 8px, #121a2c 8px, #121a2c 16px);
+    border-style: dashed; border-color: var(--future); opacity: .85;
+  }
+  .node.future .nm { color: var(--future); }
+  .node.future .nm::after {
+    content: "not in hand"; font-size: .6rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+    color: var(--future); border: 1px solid var(--future); border-radius: 6px; padding: 1px 6px; margin-left: 8px; vertical-align: middle;
+  }
+  .node.t1 { border-left: 3px solid var(--t1); }
+  .node.t2 { border-left: 3px solid var(--t2); }
+  .node.dim { opacity: .5; }
+
+  .arrow { text-align: center; color: var(--accent); font-size: 1.3rem; line-height: 1; margin: 2px 0; }
+  .flowlabel { text-align: center; color: var(--muted); font-size: .82rem; padding: 12px 0 2px; }
+  .wire { margin: 30px 0; border: 0; border-top: 2px dashed color-mix(in srgb, var(--accent) 50%, var(--line)); position: relative; }
+  .wire::after {
+    content: attr(data-label); position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
+    background: var(--bg); padding: 0 14px; color: var(--accent); font-size: .78rem; font-weight: 600; letter-spacing: .03em;
+  }
+
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; margin: 18px 0 4px; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; font-size: .82rem; color: var(--muted); }
+  .sw { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: .9rem; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; }
+  td code { background: #0f1626; padding: 2px 6px; border-radius: 5px; font-size: .85em; color: #c5d3f0; }
+  .tier { font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+  .tier.a { background: color-mix(in srgb, var(--t1) 18%, transparent); color: var(--t1); border: 1px solid color-mix(in srgb,var(--t1) 40%, transparent); }
+  .tier.b { background: color-mix(in srgb, var(--t2) 16%, transparent); color: var(--t2); border: 1px solid color-mix(in srgb,var(--t2) 40%, transparent); }
+  .tier.c { background: color-mix(in srgb, var(--future) 18%, transparent); color: #b9c4dd; border: 1px solid color-mix(in srgb,var(--future) 50%, transparent); }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 14px; margin-top: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .card.warn { border-color: color-mix(in srgb, var(--future) 50%, var(--line)); }
+  .card h4 { margin: 0 0 8px; font-size: 1rem; }
+  .card p, .card ul { color: var(--muted); font-size: .88rem; margin: 0; }
+  .card ul { padding-left: 18px; } .card li { margin: 4px 0; }
+
+  .phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px; margin-top: 10px; }
+  .phase { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .phase .ph { font-weight: 700; color: var(--nano); font-size: .95rem; }
+  .phase .seq { font-size: .7rem; color: var(--muted); letter-spacing: .1em; }
+  .phase .imu, .phase .fsr { font-size: .82rem; margin-top: 8px; color: var(--muted); }
+  .phase .imu b { color: var(--accent); } .phase .fsr b { color: var(--future); }
+
+  footer { margin-top: 60px; color: var(--muted); font-size: .8rem; text-align: center; border-top: 1px solid var(--line); padding-top: 20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="title">
+    <span class="pill">Moon Walk · Gait-Sensing Layer</span>
+    <h1>Sensor → Six Gait Metrics</h1>
+    <p class="sub">How a sensor box clipped to a walking cane turns raw IMU signals into gait metrics — and which are measured as absolutes versus per-user trends. Measure-and-trend, not diagnostic (ADR-0001).</p>
+    <div class="banner">
+      <b>Current build = IMU-only.</b> The only sensor physically in hand is the Arduino Nano 33 BLE's onboard <b>LSM9DS1 IMU</b>. The designed multi-FSR <b>Handle Load</b> grip and the <b>ToF</b> tip sensor (CONTEXT.md / ADR-0002) are <b>not yet acquired</b>. All six metrics are derivable from the IMU alone; the FSR &amp; ToF are optional upgrades that tighten the loading and spatial metrics.
+    </div>
+  </header>
+
+  <!-- ============ 1. PHYSICAL PRINCIPLE ============ -->
+  <h2><span class="num">1</span>The sensing principle — one Stick Cycle, IMU only</h2>
+  <p class="lead">The cane pivots about its tip. One <b>Stick Cycle</b> (plant → load → push → swing) runs in phase with the user's gait — a proxy for it, <i>not</i> identical. With no force sensor, the IMU alone separates the planted phase (stick stationary) from the swing phase (stick rotating).</p>
+  <div class="phases">
+    <div class="phase">
+      <div class="seq">PHASE 1</div><div class="ph">Plant</div>
+      <div class="imu"><b>IMU:</b> angular rate → 0 + accel impact spike → stick stationary → <b>plant event &amp; ZUPT reset</b></div>
+      <div class="fsr"><b>FSR (future):</b> would also show load rising</div>
+    </div>
+    <div class="phase">
+      <div class="seq">PHASE 2</div><div class="ph">Load</div>
+      <div class="imu"><b>IMU:</b> stick near-vertical, low angular rate (inferred "planted")</div>
+      <div class="fsr"><b>FSR (future):</b> would measure load <i>magnitude</i> directly</div>
+    </div>
+    <div class="phase">
+      <div class="seq">PHASE 3</div><div class="ph">Push</div>
+      <div class="imu"><b>IMU:</b> acceleration along shaft begins; angular rate rising</div>
+      <div class="fsr"><b>FSR (future):</b> load decaying</div>
+    </div>
+    <div class="phase">
+      <div class="seq">PHASE 4</div><div class="ph">Swing</div>
+      <div class="imu"><b>IMU:</b> gyro integrates swing arc <b>θ</b>; high angular rate</div>
+      <div class="fsr"><b>FSR (future):</b> load ≈ 0</div>
+    </div>
+  </div>
+  <div class="cards" style="margin-top:14px">
+    <div class="card"><h4>IMU does everything</h4><p>6-axis accel+gyro (magnetometer ignored). The stationary tip-plant is detected from low angular rate + an impact spike — that same instant is the zero-velocity (ZUPT) reset. Gyro integration over the swing gives θ.</p></div>
+    <div class="card warn"><h4>No force = motion proxy</h4><p>Without an FSR, "planted/loaded" is inferred from the stick being <i>still</i>, not from measured force. This is fuzzier at plant/lift edges, and a light touch that bears no weight still reads as "planted".</p></div>
+    <div class="card"><h4>Stick ≠ leg</h4><p>We instrument the stick, not the leg, and there is no force plate. Temporal metrics are honest <b>Stick-proxies</b>; spatial metrics are <b>trend-only</b>.</p></div>
+  </div>
+
+  <!-- ============ 2. PIPELINE ============ -->
+  <h2><span class="num">2</span>Data pipeline &amp; compute split (ADR-0004)</h2>
+  <p class="lead">Latency-critical, full-rate work lives on the Nano. Only compact <b>per-cycle digests</b> cross the UART wire. Heavy intelligence and the app live on the UNO Q. Health data never leaves device + phone.</p>
+
+  <div class="legend">
+    <span><i class="sw" style="background:var(--nano)"></i> Nano 33 BLE — real-time</span>
+    <span><i class="sw" style="background:var(--uno)"></i> UNO Q — intelligence</span>
+    <span><i class="sw" style="background:var(--phone)"></i> Phone — companion app</span>
+    <span><i class="sw" style="background:var(--future)"></i> not in hand (optional upgrade)</span>
+  </div>
+
+  <div class="pipeline">
+
+    <!-- NANO -->
+    <div class="layer nano">
+      <span class="tag">Nano 33 BLE · Sensor Node (stick-mounted)</span>
+      <h3>Always-on, full-rate sensing + cycle detection + offline safety</h3>
+      <div class="row">
+        <div class="node sensor"><div class="nm">LSM9DS1 IMU</div><div class="dl">accel + gyro · ~100–200 Hz · mag unused · the only sensor in hand</div></div>
+        <div class="node future"><div class="nm">Grip FSR(s)</div><div class="dl">would add direct Handle Load · analog ADC</div></div>
+        <div class="node future"><div class="nm">ToF (tip)</div><div class="dl">would add ground-contact + Proximity Alert</div></div>
+      </div>
+      <div class="arrow">↓</div>
+      <div class="row center">
+        <div class="node" style="flex-basis:320px"><div class="nm">Sensor Acquisition</div><div class="dl">one timestamped raw IMU stream</div></div>
+      </div>
+      <div class="arrow">↓</div>
+      <div class="row">
+        <div class="node deep"><div class="nm">Stick Cycle Detector</div><div class="dl">plant/swing events from angular-rate + impact · cycle boundaries · swing angle θ · IMU-stillness ZUPT</div></div>
+        <div class="node deep dim"><div class="nm">Look Gesture</div><div class="dl">shares the IMU stream (Proximity Alert needs the future ToF)</div></div>
+      </div>
+    </div>
+
+    <hr class="wire" data-label="UART — per-cycle digests only (events · metrics · triggers)  ·  NOT raw samples">
+
+    <!-- UNO Q -->
+    <div class="layer uno">
+      <span class="tag">UNO Q · Compute Brain (Linux side)</span>
+      <h3>Gait intelligence — runs lazily, no hard real-time budget</h3>
+      <div class="row">
+        <div class="node deep"><div class="nm">Gait Metric Engine</div><div class="dl">TEMPORAL: cycle time, cadence, duty factor, planted-duration proxy</div></div>
+        <div class="node deep"><div class="nm">Distance Estimator</div><div class="dl">SPATIAL (mode-aware): Pendulum + ZUPT → stride → velocity</div></div>
+      </div>
+      <div class="flowlabel">↕ stride feeds velocity · per-cycle metric vector ↓</div>
+      <div class="row">
+        <div class="node deep" style="flex-basis:420px"><div class="nm">Baseline &amp; Drift Model</div><div class="dl">learns per-user Baseline · scores sustained Drift · raises Alert (single anomaly ≠ Alert)</div></div>
+        <div class="node"><div class="nm">History Store</div><div class="dl">on-device persistence</div></div>
+      </div>
+    </div>
+
+    <hr class="wire" data-label="BLE 5.0 — metrics + Alerts (w/ disclaimer)  ·  health data: device + phone only, no cloud">
+
+    <!-- PHONE -->
+    <div class="layer phone">
+      <span class="tag">Phone · Companion App</span>
+      <h3>Activity &amp; trend views, Alerts, optional doctor trend-report export</h3>
+      <div class="row">
+        <div class="node"><div class="nm">Activity / Trend View</div><div class="dl">per-user trends over time</div></div>
+        <div class="node"><div class="nm">Wellness Alerts</div><div class="dl">inline MEDICAL CLAIM SAFETY disclaimer (ADR-0005)</div></div>
+        <div class="node"><div class="nm">Trend-Report Export</div><div class="dl">user-initiated · for the doctor</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ 3. METRICS ============ -->
+  <h2><span class="num">3</span>The six metrics — IMU-only build</h2>
+  <p class="lead">All six come from the IMU alone. Four temporal metrics are reliable absolutes; the two spatial metrics are trend-only. Two loading metrics drop one notch — measured from IMU <i>stillness</i> rather than from force — and would tighten to Tier 1 if an FSR is added.</p>
+  <table>
+    <thead><tr><th>Metric</th><th>Module</th><th>IMU-only signals</th><th>Formula / method</th><th>Tier (IMU-only)</th></tr></thead>
+    <tbody>
+      <tr><td><b>Gait cycle time</b></td><td>Gait Metric Engine</td><td>plant timestamps (angular-rate ≈ 0 + impact)</td><td><code>t_plant[n] − t_plant[n−1]</code></td><td><span class="tier a">Absolute</span></td></tr>
+      <tr><td><b>Cadence</b></td><td>Gait Metric Engine</td><td>plant timestamps</td><td><code>60 / cycle_time</code></td><td><span class="tier a">Absolute</span></td></tr>
+      <tr><td><b>Stride length</b></td><td>Distance Estimator</td><td>gyro angle θ · stick length L · IMU-stillness ZUPT</td><td><code>L · sin(θ)</code>, ZUPT-bounded</td><td><span class="tier b">Trend-only</span></td></tr>
+      <tr><td><b>Gait velocity</b></td><td>Estimator + Engine</td><td>stride × cadence</td><td><code>stride_length · cadence</code></td><td><span class="tier b">Trend-only</span></td></tr>
+      <tr><td><b>Duty factor</b><div style="color:var(--muted);font-size:.78rem">planted fraction</div></td><td>Gait Metric Engine</td><td>IMU-stillness "planted" window ÷ cycle</td><td><code>planted_dur / cycle_time</code></td><td><span class="tier c">Inferred → FSR ⇒ Absolute</span></td></tr>
+      <tr><td><b>Stance time</b><div style="color:var(--muted);font-size:.78rem">planted-duration proxy</div></td><td>Gait Metric Engine</td><td>IMU-stillness "planted" interval</td><td><code>planted_duration</code></td><td><span class="tier c">Inferred → FSR ⇒ Absolute</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============ 4. CALIBRATION ============ -->
+  <h2><span class="num">4</span>Calibration &amp; per-user Baseline</h2>
+  <div class="cards">
+    <div class="card"><h4>Mode &amp; stick length L</h4><p>Cane vs Walker is set manually at setup (ADR-0002) and selects the Distance Estimator's model. Stick length L is the geometric scale for every spatial metric — <code>L·sin(θ)</code> is meaningless without it.</p></div>
+    <div class="card warn"><h4>FSR grip threshold — N/A in this build</h4><p>The designed per-user FSR load threshold (PRD US-4) doesn't apply yet — there's no FSR. Its stand-in is the IMU motion/stillness threshold that decides "planted vs swinging". Re-enable the load calibration when an FSR is added.</p></div>
+    <div class="card"><h4>Continuous Baseline → Drift</h4><p>The device learns this user's own normal on-device. Only <b>sustained</b> Drift raises an Alert; a single odd walk must not. Because trends are user-vs-self, constant stride underestimation cancels for change-detection (ICC 0.72–0.76).</p></div>
+  </div>
+
+  <!-- ============ 5. HARDWARE NOTE ============ -->
+  <h2><span class="num">5</span>Hardware reality check</h2>
+  <div class="cards">
+    <div class="card"><h4>✅ IMU covers all six</h4><p>LSM9DS1 ranges (±2000 dps / ±16 g, up to 952 Hz) comfortably exceed cane motion. 100–200 Hz resolves plant impacts and the swing arc. No second sensor is required to produce any metric.</p></div>
+    <div class="card warn"><h4>⚠️ FSR &amp; ToF not in hand</h4><p>The docs design in a multi-FSR Handle Load grip and a ToF tip sensor; neither is acquired. Effect: stance time &amp; duty factor are <i>motion-inferred</i>, not force-measured; and the offline Proximity Alert can't run without the ToF.</p></div>
+    <div class="card"><h4>🔌 Constraints &amp; upgrades</h4><p>3.3 V only — any future FSR drives off 3.3 V to one analog pin (~$5–15). No onboard charger; no microphone (plain Nano 33 BLE, not the Sense). UART protocol &amp; BLE GATT are hand-rolled.</p></div>
+  </div>
+
+  <footer>
+    Moon Walk — gait-sensing architecture, <b>IMU-only build</b> · Cane Mode shown (Walker Mode swaps the Distance Estimator internals for wheel-encoder odometry and needs dual-grip FSRs not in hand).<br>
+    Sources: docs/PRD.md, CONTEXT.md, FEATURES.md, ADR-0001/0002/0004/0005. FSR Handle Load &amp; ToF are designed but not yet acquired; sample rates &amp; UART packet design are an engineering budget, not yet pinned in the docs.
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moon Walk — How we calculate stride length</title>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#161d26; --panel2:#1c2530; --line:#2a3542;
+    --ink:#e8eef4; --dim:#9fb0c0; --faint:#6b7d8f;
+    --accent:#5ec8d8; --accent2:#7ee0a0; --warn:#f0b95c; --tier2:#e8954a;
+    --mono:'SF Mono',ui-monospace,'Cascadia Code',Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:920px;margin:0 auto;padding:48px 24px 96px}
+  header h1{font-size:2rem;margin:0 0 6px;letter-spacing:-.02em}
+  header .sub{color:var(--dim);font-size:1.05rem;margin:0 0 4px}
+  header .tag{display:inline-block;margin-top:14px;font-size:.78rem;
+    color:var(--accent);border:1px solid var(--line);border-radius:999px;
+    padding:4px 12px;background:var(--panel)}
+  h2{font-size:1.35rem;margin:48px 0 12px;letter-spacing:-.01em;
+    border-top:1px solid var(--line);padding-top:32px}
+  h2 .n{color:var(--faint);font-variant-numeric:tabular-nums;margin-right:10px}
+  h3{font-size:1.05rem;margin:24px 0 8px;color:var(--accent2)}
+  p{color:var(--ink)}
+  .lead{font-size:1.1rem;color:var(--dim)}
+  code{font-family:var(--mono);background:var(--panel2);padding:2px 6px;
+    border-radius:4px;font-size:.9em;color:var(--accent)}
+  .eq{font-family:var(--mono);background:var(--panel);border:1px solid var(--line);
+    border-left:3px solid var(--accent);border-radius:8px;padding:16px 20px;
+    margin:14px 0;font-size:1.05rem;overflow-x:auto;color:var(--ink)}
+  .eq .lbl{float:right;color:var(--faint);font-size:.8rem;font-family:var(--sans)}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:24px;margin:20px 0}
+  /* interactive */
+  .demo{display:grid;grid-template-columns:1fr 280px;gap:24px;align-items:center}
+  @media(max-width:680px){.demo{grid-template-columns:1fr}}
+  svg{width:100%;height:auto;background:var(--panel2);border-radius:10px;border:1px solid var(--line)}
+  .ctrl{display:flex;flex-direction:column;gap:18px}
+  .ctrl label{font-size:.85rem;color:var(--dim);display:flex;justify-content:space-between}
+  .ctrl label b{color:var(--accent);font-family:var(--mono)}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .readout{background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+    padding:14px;text-align:center;margin-top:4px}
+  .readout .big{font-size:2rem;font-family:var(--mono);color:var(--accent2);
+    font-variant-numeric:tabular-nums}
+  .readout .cap{font-size:.75rem;color:var(--faint);text-transform:uppercase;letter-spacing:.08em}
+  /* steps */
+  ol.steps{list-style:none;counter-reset:s;padding:0;margin:20px 0}
+  ol.steps>li{counter-increment:s;position:relative;padding:18px 18px 18px 60px;
+    margin:12px 0;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+  ol.steps>li::before{content:counter(s);position:absolute;left:16px;top:16px;
+    width:30px;height:30px;border-radius:50%;background:var(--accent);color:#06121a;
+    font-weight:700;display:grid;place-items:center;font-family:var(--mono)}
+  ol.steps>li b{color:var(--accent2)}
+  .key{border-left-color:var(--accent2)!important}
+  .pill{display:inline-block;font-size:.7rem;padding:2px 8px;border-radius:999px;
+    background:var(--panel2);border:1px solid var(--line);color:var(--dim);margin-left:6px}
+  .warn{background:#241c12;border:1px solid #4a3a1c;border-radius:12px;padding:20px 24px;margin:20px 0}
+  .warn h3{color:var(--warn);margin-top:0}
+  .warn ul{margin:8px 0 0;padding-left:20px}
+  .warn li{margin:6px 0;color:#e6d5b8}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.92rem}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
+  th{color:var(--faint);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em}
+  td code{font-size:.85em}
+  .refs{font-size:.85rem;color:var(--dim)}
+  .refs li{margin:8px 0}
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--line);
+    color:var(--faint);font-size:.82rem}
+  .tierbadge{color:var(--tier2);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>How Moon Walk calculates stride length</h1>
+    <p class="sub">Cane Mode · single shaft-mounted IMU (gyroscope + accelerometer)</p>
+    <p class="sub" style="font-size:.95rem">From a swinging cane to a stride length, step by step.</p>
+    <span class="tag">Distance Estimator · Tier-2 trend metric</span>
+  </header>
+
+  <p class="lead">Your cane plants its tip, rotates about that tip like an inverted
+  pendulum, then lifts and swings to the next plant. One plant-to-plant period is a
+  <b>Stick Cycle</b>. The horizontal distance the cane travels in that cycle is the
+  <b>stride length</b>. Here are the two ways to compute it — the simple geometry, and
+  the validated one we actually ship.</p>
+
+  <!-- ============ THE SETUP / INTERACTIVE ============ -->
+  <h2><span class="n">1</span>The geometry</h2>
+  <p>The IMU sits on the shaft a fixed distance <b>L</b> above the tip — your one
+  calibration constant ("enter your stick length"). As you step, the cane sweeps
+  through a swing angle <b>θ</b> measured from vertical. Drag the sliders:</p>
+
+  <div class="panel">
+    <div class="demo">
+      <svg id="scene" viewBox="0 0 460 320" aria-label="Cane pendulum diagram"></svg>
+      <div class="ctrl">
+        <div>
+          <label>Stick length&nbsp;L <b><span id="Lv">0.90</span> m</b></label>
+          <input id="L" type="range" min="0.6" max="1.2" step="0.01" value="0.9">
+        </div>
+        <div>
+          <label>Swing angle&nbsp;θ <b><span id="Tv">28</span>°</b></label>
+          <input id="T" type="range" min="5" max="45" step="1" value="28">
+        </div>
+        <div class="readout">
+          <div class="cap">stride ≈ 2·L·sin θ</div>
+          <div class="big"><span id="stride">0.85</span> m</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ VERSION A ============ -->
+  <h2><span class="n">2</span>Version A — the simple geometry</h2>
+  <p>If the tip is a perfect fixed pivot, the IMU (and your hand) swing forward by
+  <code>L·sinθ</code>. Plant the cane ahead at angle θ, push past vertical to θ on the
+  other side, and the ground covered is the sum:</p>
+
+  <div class="eq">stride ≈ L · sin(θ<sub>fwd</sub>) + L · sin(θ<sub>back</sub>) <span class="lbl">simple pendulum geometry</span></div>
+
+  <p>You get θ by <b>integrating the gyroscope</b> over the swing, resetting to zero at
+  each plant:</p>
+
+  <div class="eq">θ(t) = ∫ ω(t) dt&nbsp;&nbsp;&nbsp;(θ = 0 at each plant) <span class="lbl">gyro integration</span></div>
+
+  <p>Cheap, and roughly what the architecture doc describes. But it assumes a perfect
+  fixed pivot and ignores that your arm also translates — so it's a coarse
+  <span class="tierbadge">Tier-2</span> approximation. Fine for a first cut.</p>
+
+  <!-- ============ VERSION B ============ -->
+  <h2><span class="n">3</span>Version B — the validated way <span class="pill">ship this</span></h2>
+  <p>Dang &amp; Suh (2018) measured a cane-mounted IMU to <b>0.67–1.27 % distance
+  error</b> with this approach. Instead of trusting the geometry, it computes the
+  IMU's actual velocity from the gyro, then integrates — once per Stick Cycle, between
+  plant <i>n</i> and plant <i>n+1</i>:</p>
+
+  <ol class="steps">
+    <li><b>Detect the plant (ZUPT anchor).</b> Both true at once (Brahms 2018
+      thresholds): <code>|ω| &lt; 3.5 rad/s</code> AND <code>0.3g &lt; |a| &lt; 1.7g</code>.
+      At a plant the tip velocity is ≈ 0 — this is what kills drift. Without a force
+      sensor, this stillness test <i>is</i> your plant detector.</li>
+
+    <li><b>Track cane tilt</b> with a Madgwick filter (gyro + accel, no magnetometer).
+      Gives orientation <code>C(t)</code> at ~0.9° error (Gorordo Fernandez 2020).</li>
+
+    <li class="key"><b>Velocity from the gyro — not the accelerometer.</b> While the tip
+      is planted the cane rotates rigidly about it, so the IMU's velocity is purely
+      rotational. This is the key move: no double-integrating noisy acceleration.
+      <div class="eq" style="margin-top:12px">v<sub>world</sub>(t) = C(t) · ( ω(t) × r<sub>tip</sub> )&nbsp;&nbsp;&nbsp; ⇒ |v| ≈ L·ω <span class="lbl">inverted-pendulum velocity · Dang &amp; Suh 2018</span></div>
+      <code>r<sub>tip</sub></code> is the vector from IMU to tip, magnitude L.</li>
+
+    <li><b>Integrate velocity over the stride</b> to get horizontal displacement:
+      <div class="eq" style="margin-top:12px">Δx = ∫<sub>tₙ</sub><sup>tₙ₊₁</sup> v<sub>horizontal</sub>(t) dt <span class="lbl">trapezoidal</span></div></li>
+
+    <li><b>Drift correction</b> (Sijobert 2015). At the next plant velocity should
+      return to ≈ 0; any leftover is accumulated drift — subtract it as a linear ramp:
+      <div class="eq" style="margin-top:12px">v<sub>corr</sub>(t) = v(t) − [ v(tₙ₊₁) / (tₙ₊₁ − tₙ) ] · (t − tₙ) <span class="lbl">linear de-drift</span></div></li>
+
+    <li><b>Stride length</b> = the corrected horizontal displacement between consecutive
+      plants. Then <code>velocity = stride × cadence</code> for the dashboard.</li>
+  </ol>
+
+  <h3>What it looks like in <code>hub.py</code></h3>
+  <p>Today the hub only finds cadence (gyro threshold crossings). Per detected cycle you'd add:</p>
+  <div class="eq" style="border-left-color:var(--accent2);white-space:pre">theta  = integrate(gyro_swing, dt)        # gyro arc
+v      = L * gyro_swing                    # |v| = L·ω  (pendulum velocity)
+disp   = trapz(v_horizontal, dt)           # integrate over the stride
+disp  -= linear_drift_ramp(v_at_plant)     # de-drift to the next plant
+stride = disp
+velocity = stride * cadence                # feeds the dashboard</div>
+
+  <!-- ============ CAVEATS ============ -->
+  <h2><span class="n">4</span>The honest caveats</h2>
+  <div class="warn">
+    <h3>⚠ Report this as a trend, never a clinical absolute</h3>
+    <ul>
+      <li><b>IMU-only today.</b> Plant detection is IMU-stillness, not measured force —
+        a light touch can look like a weight-bearing plant. The dual threshold (Step 1)
+        is the best defence until the FSR arrives.</li>
+      <li><b>L must be calibrated per user.</b> Error in L scales straight into stride
+        error — that's why the app asks for stick length at setup.</li>
+      <li><b>Expect 6 % (Sijobert) to 25–42 % (Werner) absolute error.</b> Calibrate
+        against the User's <i>own</i> baseline; never show clinical centimetres.
+        This is ADR-0001 / ADR-0005 — wellness, not medicine.</li>
+      <li><b>Dragging breaks it.</b> No plant ⇒ no ZUPT ⇒ runaway drift (Dang &amp; Suh
+        flag this explicitly).</li>
+    </ul>
+  </div>
+
+  <h3>A signal you may prefer over stride length</h3>
+  <p>Stride length is the hard, inaccurate metric. Phinyomark (2025) shows
+  <b>stride-interval variability</b> — coefficient of variation <code>CV = (σ/μ)·100%</code>
+  and the detrended-fluctuation exponent <code>α<sub>DFA</sub></code> — is more sensitive
+  to gait change (Cohen's d up to 2.87) and needs <i>only the plant timestamps you already
+  detect</i>: no integration, no L, no drift. It may be the smarter headline number for
+  the Drift / Alert pipeline, with stride length kept as a secondary trend.</p>
+
+  <!-- ============ SUMMARY TABLE ============ -->
+  <h2><span class="n">5</span>Inputs &amp; outputs at a glance</h2>
+  <table>
+    <tr><th>Quantity</th><th>Source</th><th>Tier</th></tr>
+    <tr><td>θ — swing angle</td><td><code>∫ gyro dt</code>, reset at plant</td><td>—</td></tr>
+    <tr><td>Plant event (ZUPT)</td><td>gyro &amp; accel stillness threshold</td><td>—</td></tr>
+    <tr><td>L — stick length</td><td>user calibration (setup)</td><td>—</td></tr>
+    <tr><td>Stride length</td><td>∫ pendulum velocity, de-drifted</td><td><span class="tierbadge">Tier 2 · trend-only</span></td></tr>
+    <tr><td>Gait velocity</td><td>stride × cadence</td><td><span class="tierbadge">Tier 2 · trend-only</span></td></tr>
+    <tr><td>Cadence</td><td>plant-to-plant timing</td><td>🟢 Tier 1 · headline</td></tr>
+  </table>
+
+  <!-- ============ REFS ============ -->
+  <h2><span class="n">6</span>Sources</h2>
+  <ul class="refs">
+    <li><b>Dang &amp; Suh (2018)</b> — "Walking Distance Estimation Using Walking Canes
+      with Inertial Sensors," <i>Sensors</i> 18(230). DOI 10.3390/s18010230.
+      <i>The cane-mounted inverted-pendulum + ZUPT method (Step 3).</i></li>
+    <li><b>Sijobert et al. (2015)</b> — <i>Health</i> 7:704–714. DOI 10.4236/health.2015.76084.
+      <i>Gyro-pendulum init &amp; linear drift correction (Step 5).</i></li>
+    <li><b>Brahms et al. (2018)</b> — <i>J. Biomechanics</i>. DOI 10.1016/j.jbiomech.2018.02.003.
+      <i>Dual-threshold zero-velocity stance detection (Step 1).</i></li>
+    <li><b>Gorordo Fernandez, Ahmad &amp; Wada (2020)</b> — <i>Sensors</i> 20(4675).
+      DOI 10.3390/s20174675. <i>Madgwick tilt estimation &amp; cane mounting (Step 2).</i></li>
+    <li><b>Phinyomark et al. (2025)</b> — <i>Comput. Biol. Med.</i> 196:110796.
+      DOI 10.1016/j.compbiomed.2025.110796. <i>CV &amp; DFA variability — same LSM9DS1 IMU.</i></li>
+  </ul>
+
+  <footer>
+    Moon Walk · Cane Mode Distance Estimator · See <code>docs/references.md</code>,
+    <code>docs/architecture.md</code>, ADR-0001 (measure-and-trend) and ADR-0002
+    (dual-mode sensing). Stride length is a wellness trend, not a medical measurement.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  const svg = document.getElementById('scene');
+  const NS = 'http://www.w3.org/2000/svg';
+  const Lr = document.getElementById('L'), Tr = document.getElementById('T');
+  const Lv = document.getElementById('Lv'), Tv = document.getElementById('Tv');
+  const out = document.getElementById('stride');
+
+  // scene constants (px)
+  const W=460, H=320, groundY=250, scale=140; // px per metre
+
+  function el(tag, attrs){const e=document.createElementNS(NS,tag);
+    for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+
+  function draw(){
+    const L=parseFloat(Lr.value), thetaDeg=parseFloat(Tr.value);
+    const theta=thetaDeg*Math.PI/180;
+    Lv.textContent=L.toFixed(2); Tv.textContent=thetaDeg.toFixed(0);
+    const stride=2*L*Math.sin(theta);
+    out.textContent=stride.toFixed(2);
+
+    svg.innerHTML='';
+    // ground
+    svg.appendChild(el('line',{x1:20,y1:groundY,x2:W-20,y2:groundY,
+      stroke:'#3a4a5a','stroke-width':2}));
+    for(let x=30;x<W-20;x+=22){
+      svg.appendChild(el('line',{x1:x,y1:groundY,x2:x-8,y2:groundY+10,
+        stroke:'#2a3542','stroke-width':1.5}));
+    }
+
+    // pivot (tip) — centred
+    const px=W/2, py=groundY;
+    const lpx=L*scale; // cane length in px
+
+    // two cane positions: planted forward (+θ) and back (−θ)
+    function caneTop(sign){
+      return {x: px + sign*lpx*Math.sin(theta), y: py - lpx*Math.cos(theta)};
+    }
+    const fwd=caneTop(+1), back=caneTop(-1);
+
+    // stride bracket on ground: hand horizontal travel = ±L sinθ
+    const gx1=px - lpx*Math.sin(theta), gx2=px + lpx*Math.sin(theta);
+
+    // arc showing swing
+    svg.appendChild(el('path',{d:`M ${back.x} ${back.y} A ${lpx} ${lpx} 0 0 1 ${fwd.x} ${fwd.y}`,
+      fill:'none',stroke:'#2f3e4d','stroke-width':1.5,'stroke-dasharray':'4 4'}));
+
+    // ghost cane (back)
+    svg.appendChild(el('line',{x1:px,y1:py,x2:back.x,y2:back.y,
+      stroke:'#3f5160','stroke-width':4,'stroke-linecap':'round'}));
+    // active cane (forward)
+    svg.appendChild(el('line',{x1:px,y1:py,x2:fwd.x,y2:fwd.y,
+      stroke:'#5ec8d8','stroke-width':5,'stroke-linecap':'round'}));
+
+    // vertical reference
+    svg.appendChild(el('line',{x1:px,y1:py,x2:px,y2:py-lpx,
+      stroke:'#4a5a6a','stroke-width':1,'stroke-dasharray':'3 3'}));
+
+    // angle theta label
+    svg.appendChild(el('text',{x:px+14,y:py-lpx*0.62,fill:'#7ee0a0',
+      'font-size':14,'font-family':'monospace'})).textContent='θ';
+
+    // IMU dot on forward cane (~80% up shaft)
+    const imx=px+0.8*(fwd.x-px), imy=py+0.8*(fwd.y-py);
+    svg.appendChild(el('circle',{cx:imx,cy:imy,r:6,fill:'#7ee0a0',
+      stroke:'#0f1419','stroke-width':2}));
+    svg.appendChild(el('text',{x:imx+10,y:imy+4,fill:'#9fb0c0',
+      'font-size':11,'font-family':'sans-serif'})).textContent='IMU';
+
+    // tip marker
+    svg.appendChild(el('circle',{cx:px,cy:py,r:4,fill:'#f0b95c'}));
+
+    // L label along forward cane
+    const mlx=(px+fwd.x)/2, mly=(py+fwd.y)/2;
+    svg.appendChild(el('text',{x:mlx-22,y:mly,fill:'#5ec8d8',
+      'font-size':13,'font-family':'monospace'})).textContent='L';
+
+    // stride bracket
+    const by=groundY+26;
+    svg.appendChild(el('line',{x1:gx1,y1:groundY+6,x2:gx1,y2:by,stroke:'#7ee0a0','stroke-width':1.5}));
+    svg.appendChild(el('line',{x1:gx2,y1:groundY+6,x2:gx2,y2:by,stroke:'#7ee0a0','stroke-width':1.5}));
+    svg.appendChild(el('line',{x1:gx1,y1:by,x2:gx2,y2:by,stroke:'#7ee0a0','stroke-width':1.5}));
+    svg.appendChild(el('text',{x:(gx1+gx2)/2,y:by+18,fill:'#7ee0a0',
+      'font-size':12,'font-family':'monospace','text-anchor':'middle'}))
+      .textContent='stride '+stride.toFixed(2)+' m';
+  }
+
+  Lr.addEventListener('input',draw);
+  Tr.addEventListener('input',draw);
+  draw();
+})();
+</script>
+</body>
+</html>

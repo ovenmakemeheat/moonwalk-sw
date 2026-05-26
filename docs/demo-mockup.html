@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Moon Walk — Demo Mockup</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#131c2e; --panel2:#0f1726; --line:#22304a;
+    --text:#e7eef7; --muted:#8aa0b6; --accent:#a78bfa; --teal:#34d399;
+    --amber:#f6b352; --red:#f87171; --blue:#5b9bd5;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,#1a2440 0,var(--bg) 55%);
+    color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:1120px;margin:0 auto;padding:28px 22px 60px}
+  header.top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:700;letter-spacing:.3px}
+  .logo .moon{color:var(--accent)}
+  .tag{color:var(--muted);font-style:italic}
+  .sub{color:var(--muted);margin:2px 0 22px;font-size:13.5px}
+  .grid{display:grid;grid-template-columns:1fr;gap:20px}
+  @media(min-width:920px){.grid{grid-template-columns:1.3fr .85fr}}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
+    border-radius:16px;padding:18px 18px 14px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .card h2{margin:0 0 2px;font-size:16px}
+  .card .hint{color:var(--muted);font-size:12.5px;margin:0 0 12px}
+  /* metric switcher */
+  .metricbar{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 10px}
+  .mbtn{font-size:12px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);
+    border-radius:999px;padding:5px 11px;cursor:pointer;transition:.15s}
+  .mbtn:hover{color:var(--text)}
+  .mbtn.on{color:#0b1020;background:var(--accent);border-color:var(--accent);font-weight:600}
+  #cmpChart{width:100%;height:282px}
+  .roster{margin-top:8px;color:var(--muted);font-size:12.5px}
+  .roster .add{color:var(--accent);border:1px dashed rgba(167,139,250,.5);border-radius:999px;
+    padding:2px 10px;margin-left:6px;cursor:pointer}
+  .legend{display:flex;gap:16px;font-size:12px;color:var(--muted);margin:6px 0 0}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
+  .caveat{color:var(--muted);font-size:11.5px;margin-top:10px;line-height:1.45}
+  /* training */
+  .train{display:flex;flex-direction:column;align-items:center}
+  #gauge{width:260px;height:206px}
+  .cue{margin:2px 0 4px;padding:8px 16px;border-radius:999px;background:rgba(52,211,153,.12);
+    border:1px solid rgba(52,211,153,.5);color:var(--teal);font-weight:600}
+  .cue.faster{background:rgba(246,179,82,.12);border-color:rgba(246,179,82,.5);color:var(--amber)}
+  .who{align-self:center;color:var(--muted);font-size:12px;margin-bottom:4px}
+  .who b{color:var(--text)}
+  .target{color:var(--muted);font-size:12.5px;margin-top:2px}
+  .mods{display:flex;gap:10px;margin:16px 0 4px}
+  .mod{display:flex;flex-direction:column;align-items:center;gap:6px;width:78px;padding:10px 6px;
+    border-radius:12px;background:var(--panel2);border:1px solid var(--line);font-size:11.5px;color:var(--muted)}
+  .mod .ic{font-size:20px}
+  .mod.on{border-color:rgba(52,211,153,.55);color:var(--teal);background:rgba(52,211,153,.08)}
+  .mod .state{font-size:10px;letter-spacing:.4px;text-transform:uppercase}
+  .spark{width:100%;height:60px;margin-top:8px}
+  .disc{margin-top:14px;padding:9px 12px;border-radius:10px;font-size:11.5px;line-height:1.45;
+    background:rgba(91,155,213,.08);border:1px solid rgba(91,155,213,.35);color:#bcd4ee}
+  .footer{margin-top:22px;padding:10px 14px;border:1px dashed var(--line);border-radius:10px;
+    color:var(--muted);font-size:12px;text-align:center}
+  .pill{display:inline-block;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;
+    color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 9px;margin-left:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo"><span class="moon">◗</span> Moon Walk</div>
+    <div class="tag">WHOOP for your walking aid.</div>
+    <span class="pill">Demo mockup · mock data</span>
+  </header>
+  <div class="sub">Demo-day view — guests each walk a short course; every session is captured by the clip-on Sensor Node (IMU only — LSM9DS1) and added to the comparison.</div>
+
+  <div class="grid">
+    <!-- LEFT: N-walker comparison -->
+    <section class="card">
+      <h2>Gait gallery — everyone who tried it</h2>
+      <p class="hint">Pick a metric. Each bar is one walker, shown as % of a reference <i>typical</i> walk (the dashed 100% line). Within the band is teal; outside is amber.</p>
+      <div class="metricbar" id="metricBar"></div>
+      <div id="cmpChart"></div>
+      <div class="legend">
+        <span><span class="dot" style="background:#34d399"></span>within typical band</span>
+        <span><span class="dot" style="background:#f6b352"></span>outside band</span>
+        <span>— — typical (100%)</span>
+      </div>
+      <div class="roster">6 walkers captured today <span class="add">+ New walker</span></div>
+      <p class="caveat">
+        <b>Honest caveats:</b> Cadence is the most robust figure (ICC 0.72–0.97).
+        Without the force sensor in this build, <b>Stick Duty Factor</b> &amp; stance are
+        <b>IMU-estimated plant phase</b> (indirect). <b>Stride length</b> &amp; <b>Gait Velocity</b>
+        are <b>relative trends only</b> — never absolute metres. We sense the <b>stick's</b> plant,
+        not leg stance directly. "Typical" is a reference profile, not a medical norm.
+      </p>
+    </section>
+
+    <!-- RIGHT: training mode -->
+    <section class="card train">
+      <h2 style="align-self:flex-start">Training Mode — live coaching</h2>
+      <p class="hint" style="align-self:flex-start">Opt-in. Coaches the current walker toward <i>their own</i> target rhythm — one cue at a time.</p>
+      <div class="who">Coaching: <b>Sam</b></div>
+      <div id="gauge"></div>
+      <div class="cue faster">↑ A touch faster</div>
+      <div class="target">Sam's target: <b>52</b> cyc/min &nbsp;·&nbsp; now: <b>47</b></div>
+
+      <div class="mods">
+        <div class="mod on"><span class="ic">🔊</span>Voice<span class="state">on</span></div>
+        <div class="mod on"><span class="ic">📳</span>Vibration<span class="state">on</span></div>
+        <div class="mod on"><span class="ic">💡</span>LED<span class="state">on</span></div>
+      </div>
+      <div class="spark" id="spark"></div>
+
+      <div class="disc">
+        <b>Coaching, not correction.</b> A wellness Coaching Cue toward your own rhythm —
+        not physiotherapy, gait correction, or medical treatment.
+      </div>
+    </section>
+  </div>
+
+  <div class="footer">⚕ MEDICAL CLAIM SAFETY — Moon Walk is a wellness awareness cue, not a medical assessment. It does not diagnose, treat, or predict.</div>
+</div>
+
+<script>
+  const TEAL='#34d399', AMBER='#f6b352', BLUE='#5b9bd5', MUTED='#8aa0b6', LINE='#22304a', TEXT='#e7eef7';
+
+  // ---- mock roster: raw values per walker ----
+  const typical={cadence:54, cycle:1.11, duty:37, stance:27, stride:100, vel:100};
+  const walkers=[
+    {name:'Alex', cadence:54, cycle:1.11, duty:37, stance:27, stride:100, vel:100},
+    {name:'Dana', cadence:52, cycle:1.15, duty:39, stance:26, stride:97,  vel:95 },
+    {name:'Jo',   cadence:49, cycle:1.22, duty:42, stance:24, stride:91,  vel:86 },
+    {name:'Mia',  cadence:57, cycle:1.05, duty:35, stance:29, stride:106, vel:108},
+    {name:'Ravi', cadence:45, cycle:1.33, duty:46, stance:22, stride:84,  vel:75 },
+    {name:'Sam',  cadence:42, cycle:1.43, duty:49, stance:20, stride:78,  vel:69 },
+  ];
+  const METRICS=[
+    {key:'cadence',label:'Cadence',       unit:'cyc/min'},
+    {key:'cycle',  label:'Stick Cycle time',unit:'s'},
+    {key:'duty',   label:'Stick Duty Factor',unit:'%'},
+    {key:'stance', label:'Stance count',  unit:'/30s'},
+    {key:'stride', label:'Stride length', unit:'rel'},
+    {key:'vel',    label:'Gait Velocity', unit:'rel'},
+  ];
+  const BAND=12; // ±% considered "within typical band"
+
+  const chart=echarts.init(document.getElementById('cmpChart'));
+  function render(mkey){
+    const m=METRICS.find(x=>x.key===mkey);
+    const rows=walkers.map(w=>({name:w.name, raw:w[mkey], pct:Math.round(w[mkey]/typical[mkey]*100)}))
+                      .sort((a,b)=>a.pct-b.pct);
+    chart.setOption({
+      grid:{left:8,right:46,top:10,bottom:24,containLabel:true},
+      tooltip:{trigger:'item',backgroundColor:'#0f1726',borderColor:LINE,textStyle:{color:TEXT},
+        formatter:p=>`<b>${p.name}</b><br/>${m.label}: ${rows[p.dataIndex].raw} ${m.unit}`+
+                     `<br/><span style="color:${MUTED}">${p.value}% of typical</span>`},
+      xAxis:{type:'value',max:140,axisLabel:{color:MUTED,formatter:'{value}%'},
+        splitLine:{lineStyle:{color:LINE}},name:'% of typical',nameLocation:'middle',nameGap:30,nameTextStyle:{color:MUTED}},
+      yAxis:{type:'category',data:rows.map(r=>r.name),axisLabel:{color:TEXT},
+        axisLine:{lineStyle:{color:LINE}},axisTick:{show:false}},
+      series:[{
+        type:'bar',data:rows.map(r=>r.pct),barWidth:16,
+        itemStyle:{borderRadius:[0,4,4,0],
+          color:p=>Math.abs(rows[p.dataIndex].pct-100)<=BAND?TEAL:AMBER},
+        label:{show:true,position:'right',color:MUTED,formatter:'{c}%'},
+        markLine:{symbol:'none',data:[{xAxis:100}],
+          lineStyle:{color:BLUE,type:'dashed',opacity:.6},
+          label:{show:true,formatter:'typical',color:BLUE,position:'end',fontSize:10}}
+      }]
+    });
+  }
+  // build switcher
+  const bar=document.getElementById('metricBar');
+  METRICS.forEach((m,i)=>{
+    const b=document.createElement('div'); b.className='mbtn'+(i===0?' on':''); b.textContent=m.label;
+    b.onclick=()=>{document.querySelectorAll('.mbtn').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on'); render(m.key);};
+    bar.appendChild(b);
+  });
+  render('cadence');
+  addEventListener('resize',()=>chart.resize());
+
+  // ---- Training gauge ----
+  echarts.init(document.getElementById('gauge')).setOption({
+    series:[{
+      type:'gauge',min:30,max:70,startAngle:210,endAngle:-30,radius:'100%',center:['50%','62%'],
+      axisLine:{lineStyle:{width:16,color:[[0.5,'#243049'],[0.7,TEAL],[1,'#243049']]}},
+      pointer:{itemStyle:{color:TEXT},width:5,length:'62%'},
+      axisTick:{distance:-16,length:5,lineStyle:{color:'#3a4a68'}},
+      splitLine:{distance:-16,length:16,lineStyle:{color:'#3a4a68'}},
+      axisLabel:{distance:-2,color:MUTED,fontSize:10},
+      anchor:{show:true,size:10,itemStyle:{color:TEXT}},
+      detail:{valueAnimation:true,fontSize:34,fontWeight:700,color:TEXT,offsetCenter:[0,'34%'],formatter:'{value}'},
+      title:{offsetCenter:[0,'62%'],color:MUTED,fontSize:11},
+      data:[{value:47,name:'cyc/min · target 50–58'}]
+    }]
+  });
+
+  // ---- Live cadence sparkline ----
+  const N=40, pts=[]; for(let i=0;i<N;i++){pts.push(45+Math.sin(i/3)*3+(Math.random()*1.4-0.7));}
+  echarts.init(document.getElementById('spark')).setOption({
+    grid:{left:2,right:2,top:6,bottom:2},
+    xAxis:{type:'category',show:false,data:pts.map((_,i)=>i)},
+    yAxis:{type:'value',show:false,min:40,max:60},
+    series:[{type:'line',data:pts,smooth:true,symbol:'none',lineStyle:{color:TEAL,width:2},
+       areaStyle:{color:'rgba(52,211,153,.12)'},
+       markLine:{symbol:'none',data:[{yAxis:50},{yAxis:58}],
+         lineStyle:{color:TEAL,type:'dashed',opacity:.5},label:{show:false}}}]
+  });
+</script>
+</body>
+</html>
