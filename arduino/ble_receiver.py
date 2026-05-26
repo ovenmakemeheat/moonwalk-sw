@@ -2,13 +2,13 @@
 """
 ble_receiver.py
 ---------------------------------------------------------------------------
-PRIMARY UNO Q receiver: runs on the UNO Q's Linux (Debian / Qualcomm) side,
-where the BLE radio actually lives. Uses `bleak` to scan for the Nano 33 BLE
-peripheral named "NanoIMU", subscribe to its IMU characteristic, and print
-each payload (raw CSV + parsed values).
+UNO Q receiver: runs on the UNO Q's Linux (Debian / Qualcomm) side, where the
+BLE radio actually lives. Uses `bleak` to scan for the Nano 33 BLE peripheral
+named "NanoIMU", subscribe to its IMU characteristic, and print each payload
+(raw CSV + parsed values).
 
 Payload format (from nano_imu_ble_sender.ino):
-    IMU,timestamp_ms,ax_ms2,ay_ms2,az_ms2,gx_dps,gy_dps,gz_dps
+    IMU,timestamp_ms,linAccX,linAccY,linAccZ,velX,velY,velZ,posX,posY,posZ,distance,angleX,angleY,angleZ
 
 Setup (on the UNO Q Linux side):
     pip install bleak
@@ -23,13 +23,20 @@ import asyncio
 
 from bleak import BleakClient, BleakScanner
 
-# ---- Shared constants (must match the sender) ---------------------------
+# ---- Shared BLE contract (must match the sender) ------------------------
 DEVICE_NAME = "NanoIMU"
 SERVICE_UUID = "19b10000-e8f2-537e-4f6c-d104768a1214"
 CHAR_UUID = "19b10001-e8f2-537e-4f6c-d104768a1214"
 
 # Field names matching the CSV payload, in order, after the leading "IMU" tag.
-FIELDS = ("timestamp", "ax", "ay", "az", "gx", "gy", "gz")
+FIELDS = (
+    "timestamp",
+    "linAccX", "linAccY", "linAccZ",
+    "velX", "velY", "velZ",
+    "posX", "posY", "posZ",
+    "distance",
+    "angleX", "angleY", "angleZ",
+)
 
 
 def handle_payload(raw: str) -> None:
@@ -50,11 +57,7 @@ def handle_payload(raw: str) -> None:
 
 def notification_handler(_characteristic, data: bytearray) -> None:
     """bleak notify callback: decode bytes -> str and dispatch."""
-    try:
-        raw = data.decode("utf-8", errors="replace").strip()
-    except Exception as exc:  # extremely defensive; decode rarely raises here
-        print(f"decode error: {exc}")
-        return
+    raw = data.decode("utf-8", errors="replace").strip()
     handle_payload(raw)
 
 
