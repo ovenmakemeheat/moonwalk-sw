@@ -1,0 +1,7 @@
+profiles:
+  default:
+    fqbn: arduino:samd:mkrwifi1010
+    platforms:
+      - platform: arduino:samd
+
+default_profile: default
