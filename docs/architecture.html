@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Moon Walk — Gait-Sensing Architecture (IMU-only build)</title>
+<title>Moon Walk — WSFC Architecture</title>
 <style>
   :root {
     --bg: #0b1020;
@@ -17,6 +17,7 @@
     --phone: #b794f4;
     --t1: #68d391;
     --t2: #f6ad55;
+    --t3: #b794f4;
     --future: #7c89a8;
     --accent: #5b8def;
   }
@@ -31,23 +32,25 @@
   .wrap { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
   header.title { text-align: center; margin-bottom: 8px; }
   h1 { font-size: 2.1rem; margin: 0 0 6px; letter-spacing: -0.02em; }
-  .sub { color: var(--muted); font-size: 1.02rem; margin: 0 auto 18px; max-width: 740px; text-align: center; }
+  .sub { color: var(--muted); font-size: 1.02rem; margin: 0 auto 18px; max-width: 760px; text-align: center; }
   .pill {
     display: inline-block; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
     padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted);
   }
   .banner {
-    max-width: 760px; margin: 0 auto 10px; background: color-mix(in srgb, var(--nano) 10%, var(--panel));
+    max-width: 800px; margin: 0 auto 10px; background: color-mix(in srgb, var(--nano) 10%, var(--panel));
     border: 1px solid color-mix(in srgb, var(--nano) 40%, var(--line)); border-radius: 12px;
-    padding: 13px 18px; font-size: .9rem; color: var(--ink);
+    padding: 13px 18px; font-size: .9rem; color: var(--ink); text-align: left;
   }
   .banner b { color: var(--nano); }
+  .banner .des { color: var(--uno); } .banner .na { color: var(--future); }
   h2 {
     font-size: 1.35rem; margin: 46px 0 14px; padding-bottom: 8px;
     border-bottom: 1px solid var(--line); letter-spacing: -0.01em;
   }
   h2 .num { color: var(--accent); margin-right: 10px; font-variant-numeric: tabular-nums; }
   p.lead { color: var(--muted); margin-top: 0; }
+  a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
 
   .pipeline { display: flex; flex-direction: column; gap: 0; align-items: stretch; }
   .layer {
@@ -84,25 +87,34 @@
     border-radius: 6px; padding: 1px 6px; margin-left: 8px; vertical-align: middle;
   }
   .node.sensor { background: #102019; border-color: color-mix(in srgb, var(--nano) 40%, var(--line)); }
+  /* designed but not built — amber dashed */
+  .node.designed {
+    background: repeating-linear-gradient(45deg, #1a1405, #1a1405 8px, #201907 8px, #201907 16px);
+    border-style: dashed; border-color: color-mix(in srgb, var(--uno) 55%, var(--line));
+  }
+  .node.designed .nm { color: var(--uno); }
+  .node.designed .nm::after {
+    content: "designed · not built"; font-size: .6rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+    color: var(--uno); border: 1px solid color-mix(in srgb,var(--uno) 55%, var(--line)); border-radius: 6px; padding: 1px 6px; margin-left: 8px; vertical-align: middle;
+  }
+  /* not acquired — grey dashed */
   .node.future {
     background: repeating-linear-gradient(45deg, #0f1626, #0f1626 8px, #121a2c 8px, #121a2c 16px);
     border-style: dashed; border-color: var(--future); opacity: .85;
   }
   .node.future .nm { color: var(--future); }
   .node.future .nm::after {
-    content: "not in hand"; font-size: .6rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+    content: "not acquired"; font-size: .6rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
     color: var(--future); border: 1px solid var(--future); border-radius: 6px; padding: 1px 6px; margin-left: 8px; vertical-align: middle;
   }
-  .node.t1 { border-left: 3px solid var(--t1); }
-  .node.t2 { border-left: 3px solid var(--t2); }
-  .node.dim { opacity: .5; }
+  .node .step { color: var(--accent); font-weight: 800; margin-right: 6px; }
 
   .arrow { text-align: center; color: var(--accent); font-size: 1.3rem; line-height: 1; margin: 2px 0; }
   .flowlabel { text-align: center; color: var(--muted); font-size: .82rem; padding: 12px 0 2px; }
   .wire { margin: 30px 0; border: 0; border-top: 2px dashed color-mix(in srgb, var(--accent) 50%, var(--line)); position: relative; }
   .wire::after {
     content: attr(data-label); position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
-    background: var(--bg); padding: 0 14px; color: var(--accent); font-size: .78rem; font-weight: 600; letter-spacing: .03em;
+    background: var(--bg); padding: 0 14px; color: var(--accent); font-size: .78rem; font-weight: 600; letter-spacing: .03em; text-align: center; white-space: nowrap;
   }
 
   .legend { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; margin: 18px 0 4px; }
@@ -116,167 +128,188 @@
   .tier { font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
   .tier.a { background: color-mix(in srgb, var(--t1) 18%, transparent); color: var(--t1); border: 1px solid color-mix(in srgb,var(--t1) 40%, transparent); }
   .tier.b { background: color-mix(in srgb, var(--t2) 16%, transparent); color: var(--t2); border: 1px solid color-mix(in srgb,var(--t2) 40%, transparent); }
-  .tier.c { background: color-mix(in srgb, var(--future) 18%, transparent); color: #b9c4dd; border: 1px solid color-mix(in srgb,var(--future) 50%, transparent); }
+  .tier.c { background: color-mix(in srgb, var(--t3) 16%, transparent); color: var(--t3); border: 1px solid color-mix(in srgb,var(--t3) 45%, transparent); }
 
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 14px; margin-top: 12px; }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
-  .card.warn { border-color: color-mix(in srgb, var(--future) 50%, var(--line)); }
+  .card.warn { border-color: color-mix(in srgb, var(--uno) 50%, var(--line)); }
+  .card.safe { border-color: color-mix(in srgb, var(--t1) 40%, var(--line)); }
   .card h4 { margin: 0 0 8px; font-size: 1rem; }
   .card p, .card ul { color: var(--muted); font-size: .88rem; margin: 0; }
   .card ul { padding-left: 18px; } .card li { margin: 4px 0; }
 
-  .phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px; margin-top: 10px; }
+  .phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); gap: 12px; margin-top: 10px; }
   .phase { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .phase.peak { border-color: color-mix(in srgb, var(--t3) 50%, var(--line)); }
+  .phase.zero { border-color: color-mix(in srgb, var(--nano) 45%, var(--line)); }
   .phase .ph { font-weight: 700; color: var(--nano); font-size: .95rem; }
   .phase .seq { font-size: .7rem; color: var(--muted); letter-spacing: .1em; }
-  .phase .imu, .phase .fsr { font-size: .82rem; margin-top: 8px; color: var(--muted); }
-  .phase .imu b { color: var(--accent); } .phase .fsr b { color: var(--future); }
+  .phase .imu, .phase .ld { font-size: .82rem; margin-top: 8px; color: var(--muted); }
+  .phase .imu b { color: var(--accent); } .phase .ld b { color: var(--t3); }
 
   footer { margin-top: 60px; color: var(--muted); font-size: .8rem; text-align: center; border-top: 1px solid var(--line); padding-top: 20px; }
+  footer a { color: var(--muted); text-decoration: underline; }
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <header class="title">
-    <span class="pill">Moon Walk · Gait-Sensing Layer</span>
-    <h1>Sensor → Six Gait Metrics</h1>
-    <p class="sub">How a sensor box clipped to a walking cane turns raw IMU signals into gait metrics — and which are measured as absolutes versus per-user trends. Measure-and-trend, not diagnostic (ADR-0001).</p>
+    <span class="pill">Moon Walk · Flagship Application</span>
+    <h1>Weight Support Feedback Cane — Architecture</h1>
+    <p class="sub">Moon Walk is one clip-on sensor running several applications (ADR-0009). The flagship <b>WSFC</b> runs a real-time weight-support biofeedback loop that retrains a rehab Patient to load the affected leg instead of over-leaning on the cane. Wellness gait-monitoring and the Speaking Stick are secondary apps on the same hardware.</p>
     <div class="banner">
-      <b>Current build = IMU-only.</b> The only sensor physically in hand is the Arduino Nano 33 BLE's onboard <b>LSM9DS1 IMU</b>. The designed multi-FSR <b>Handle Load</b> grip and the <b>ToF</b> tip sensor (CONTEXT.md / ADR-0002) are <b>not yet acquired</b>. All six metrics are derivable from the IMU alone; the FSR &amp; ToF are optional upgrades that tighten the loading and spatial metrics.
+      <b>Hardware reality (2026-05).</b> <b>In hand:</b> the Arduino Nano 33 BLE's onboard LSM9DS1 IMU and LPS22HB barometer. <span class="des">Designed, not built:</span> the pneumatic Handle Load bladder the barometer reads (ADR-0010). <span class="na">Not acquired:</span> the ToF Distance tip sensor. So the live system is <b>IMU-only</b>; the whole WSFC loop is gated on building &amp; bench-validating the pneumatic sensor.
     </div>
   </header>
 
-  <!-- ============ 1. PHYSICAL PRINCIPLE ============ -->
-  <h2><span class="num">1</span>The sensing principle — one Stick Cycle, IMU only</h2>
-  <p class="lead">The cane pivots about its tip. One <b>Stick Cycle</b> (plant → load → push → swing) runs in phase with the user's gait — a proxy for it, <i>not</i> identical. With no force sensor, the IMU alone separates the planted phase (stick stationary) from the swing phase (stick rotating).</p>
-  <div class="phases">
-    <div class="phase">
-      <div class="seq">PHASE 1</div><div class="ph">Plant</div>
-      <div class="imu"><b>IMU:</b> angular rate → 0 + accel impact spike → stick stationary → <b>plant event &amp; ZUPT reset</b></div>
-      <div class="fsr"><b>FSR (future):</b> would also show load rising</div>
-    </div>
-    <div class="phase">
-      <div class="seq">PHASE 2</div><div class="ph">Load</div>
-      <div class="imu"><b>IMU:</b> stick near-vertical, low angular rate (inferred "planted")</div>
-      <div class="fsr"><b>FSR (future):</b> would measure load <i>magnitude</i> directly</div>
-    </div>
-    <div class="phase">
-      <div class="seq">PHASE 3</div><div class="ph">Push</div>
-      <div class="imu"><b>IMU:</b> acceleration along shaft begins; angular rate rising</div>
-      <div class="fsr"><b>FSR (future):</b> load decaying</div>
-    </div>
-    <div class="phase">
-      <div class="seq">PHASE 4</div><div class="ph">Swing</div>
-      <div class="imu"><b>IMU:</b> gyro integrates swing arc <b>θ</b>; high angular rate</div>
-      <div class="fsr"><b>FSR (future):</b> load ≈ 0</div>
-    </div>
-  </div>
-  <div class="cards" style="margin-top:14px">
-    <div class="card"><h4>IMU does everything</h4><p>6-axis accel+gyro (magnetometer ignored). The stationary tip-plant is detected from low angular rate + an impact spike — that same instant is the zero-velocity (ZUPT) reset. Gyro integration over the swing gives θ.</p></div>
-    <div class="card warn"><h4>No force = motion proxy</h4><p>Without an FSR, "planted/loaded" is inferred from the stick being <i>still</i>, not from measured force. This is fuzzier at plant/lift edges, and a light touch that bears no weight still reads as "planted".</p></div>
-    <div class="card"><h4>Stick ≠ leg</h4><p>We instrument the stick, not the leg, and there is no force plate. Temporal metrics are honest <b>Stick-proxies</b>; spatial metrics are <b>trend-only</b>.</p></div>
-  </div>
-
-  <!-- ============ 2. PIPELINE ============ -->
-  <h2><span class="num">2</span>Data pipeline &amp; compute split (ADR-0004)</h2>
-  <p class="lead">Latency-critical, full-rate work lives on the Nano. Only compact <b>per-cycle digests</b> cross the UART wire. Heavy intelligence and the app live on the UNO Q. Health data never leaves device + phone.</p>
+  <!-- ============ 1. TWO BOARDS ============ -->
+  <h2><span class="num">1</span>Two boards, one sensor (ADR-0004)</h2>
+  <p class="lead">The over-lean cue must be <b>immediate and offline</b>, so the WSFC Feedback Loop runs on the always-on Nano; the Threshold Engine (which only updates the target band per session/week) runs on the UNO Q's Linux side with history and the wellness intelligence. Health data never leaves device + phone.</p>
 
   <div class="legend">
-    <span><i class="sw" style="background:var(--nano)"></i> Nano 33 BLE — real-time</span>
+    <span><i class="sw" style="background:var(--nano)"></i> Nano 33 BLE — real-time, offline</span>
     <span><i class="sw" style="background:var(--uno)"></i> UNO Q — intelligence</span>
-    <span><i class="sw" style="background:var(--phone)"></i> Phone — companion app</span>
-    <span><i class="sw" style="background:var(--future)"></i> not in hand (optional upgrade)</span>
+    <span><i class="sw" style="background:var(--phone)"></i> Phone / Clinician</span>
+    <span><i class="sw" style="background:var(--uno);opacity:.6"></i> designed · not built</span>
+    <span><i class="sw" style="background:var(--future)"></i> not acquired</span>
   </div>
 
   <div class="pipeline">
 
     <!-- NANO -->
     <div class="layer nano">
-      <span class="tag">Nano 33 BLE · Sensor Node (stick-mounted)</span>
-      <h3>Always-on, full-rate sensing + cycle detection + offline safety</h3>
+      <span class="tag">Nano 33 BLE · Sensor Node (stick-mounted, always-on)</span>
+      <h3>Full-rate sensing + the real-time WSFC Feedback Loop + offline tactile cue</h3>
       <div class="row">
-        <div class="node sensor"><div class="nm">LSM9DS1 IMU</div><div class="dl">accel + gyro · ~100–200 Hz · mag unused · the only sensor in hand</div></div>
-        <div class="node future"><div class="nm">Grip FSR(s)</div><div class="dl">would add direct Handle Load · analog ADC</div></div>
-        <div class="node future"><div class="nm">ToF (tip)</div><div class="dl">would add ground-contact + Proximity Alert</div></div>
+        <div class="node sensor"><div class="nm">LSM9DS1 IMU</div><div class="dl">accel + gyro · ~100–200 Hz · mag unused · IN HAND</div></div>
+        <div class="node designed"><div class="nm">LPS22HB + air bladder</div><div class="dl">Handle Load (P = F/A) · barometer in hand, bladder not built (ADR-0010)</div></div>
+        <div class="node future"><div class="nm">ToF (tip)</div><div class="dl">stick-cycle phase + Proximity Alert</div></div>
       </div>
       <div class="arrow">↓</div>
       <div class="row center">
-        <div class="node" style="flex-basis:320px"><div class="nm">Sensor Acquisition</div><div class="dl">one timestamped raw IMU stream</div></div>
+        <div class="node" style="flex-basis:340px"><div class="nm">Sensor Acquisition</div><div class="dl">timestamped raw IMU + pressure streams</div></div>
       </div>
       <div class="arrow">↓</div>
       <div class="row">
-        <div class="node deep"><div class="nm">Stick Cycle Detector</div><div class="dl">plant/swing events from angular-rate + impact · cycle boundaries · swing angle θ · IMU-stillness ZUPT</div></div>
-        <div class="node deep dim"><div class="nm">Look Gesture</div><div class="dl">shares the IMU stream (Proximity Alert needs the future ToF)</div></div>
+        <div class="node deep" style="flex-basis:440px"><div class="nm">WSFC Feedback Loop</div><div class="dl">rule-based + DSP (§2, ADR-0011): per-step Handle Load vs target band → over-lean cue</div></div>
+        <div class="node"><div class="nm">Buzzer / Haptic</div><div class="dl">out-of-band cue · offline, immediate</div></div>
       </div>
     </div>
 
-    <hr class="wire" data-label="UART — per-cycle digests only (events · metrics · triggers)  ·  NOT raw samples">
+    <hr class="wire" data-label="UART — per-step digests + in-band log (NOT raw samples)  ·  ↑ current target band">
 
     <!-- UNO Q -->
     <div class="layer uno">
       <span class="tag">UNO Q · Compute Brain (Linux side)</span>
-      <h3>Gait intelligence — runs lazily, no hard real-time budget</h3>
+      <h3>Per-session / per-week intelligence — no hard real-time budget</h3>
       <div class="row">
-        <div class="node deep"><div class="nm">Gait Metric Engine</div><div class="dl">TEMPORAL: cycle time, cadence, duty factor, planted-duration proxy</div></div>
-        <div class="node deep"><div class="nm">Distance Estimator</div><div class="dl">SPATIAL (mode-aware): Pendulum + ZUPT → stride → velocity</div></div>
+        <div class="node deep" style="flex-basis:420px"><div class="nm">Threshold Engine</div><div class="dl">baseline (percentile of per-step-peak distribution) → target faded −10%/wk (≈60%→30%) → advance only at ≥80% in-band (ADR-0009)</div></div>
+        <div class="node"><div class="nm">Session / Dose + Recovery Metrics</div><div class="dl">in-band-step % · symmetry · cadence</div></div>
       </div>
-      <div class="flowlabel">↕ stride feeds velocity · per-cycle metric vector ↓</div>
+      <div class="flowlabel">↕ shares history with the wellness intelligence</div>
       <div class="row">
-        <div class="node deep" style="flex-basis:420px"><div class="nm">Baseline &amp; Drift Model</div><div class="dl">learns per-user Baseline · scores sustained Drift · raises Alert (single anomaly ≠ Alert)</div></div>
+        <div class="node deep"><div class="nm">Baseline &amp; Drift (wellness app)</div><div class="dl">learns User Baseline · scores sustained Drift → non-medical Alert</div></div>
         <div class="node"><div class="nm">History Store</div><div class="dl">on-device persistence</div></div>
       </div>
     </div>
 
-    <hr class="wire" data-label="BLE 5.0 — metrics + Alerts (w/ disclaimer)  ·  health data: device + phone only, no cloud">
+    <hr class="wire" data-label="BLE / Wi-Fi — metrics + progress  ·  health data: device + phone only, no cloud">
 
     <!-- PHONE -->
     <div class="layer phone">
-      <span class="tag">Phone · Companion App</span>
-      <h3>Activity &amp; trend views, Alerts, optional doctor trend-report export</h3>
+      <span class="tag">Phone · Patient &amp; Clinician</span>
+      <h3>Live in-band display + clinician recovery readout</h3>
       <div class="row">
-        <div class="node"><div class="nm">Activity / Trend View</div><div class="dl">per-user trends over time</div></div>
-        <div class="node"><div class="nm">Wellness Alerts</div><div class="dl">inline MEDICAL CLAIM SAFETY disclaimer (ADR-0005)</div></div>
-        <div class="node"><div class="nm">Trend-Report Export</div><div class="dl">user-initiated · for the doctor</div></div>
+        <div class="node"><div class="nm">Patient view — Walk Buddies skin</div><div class="dl">MOVE bar = live in-band-loading display (ADR-0008)</div></div>
+        <div class="node"><div class="nm">Clinician readout</div><div class="dl">recovery progress · target schedule · in-band-step %</div></div>
       </div>
     </div>
 
   </div>
+  <p class="lead" style="margin-top:14px;font-size:.85rem"><b>Dev transport:</b> before the UART link exists, the Nano streams IMU over BLE to a local hub → WebSocket → dashboard / Walk Buddies (<code>realtime/hub.py</code>, ADR-0007).</p>
+
+  <!-- ============ 2. WSFC LOOP ============ -->
+  <h2><span class="num">2</span>The WSFC real-time loop — rule-based + DSP (ADR-0011)</h2>
+  <p class="lead">The flagship loop is <b>rule-based + DSP, not ML.</b> It decomposes into three on-device modules plus the per-session Threshold Engine. ML is a <i>deferred, named fallback for segmentation only</i> — never in the cue decision, and never classifying "abnormal" / "fall-risk".</p>
+
+  <div class="layer nano">
+    <span class="tag">Nano · per step, real-time</span>
+    <h3>① segment → ② condition load → ③ decide cue</h3>
+    <div class="row">
+      <div class="node"><div class="nm"><span class="step">①</span>Swing/Step Segmenter</div><div class="dl"><b>RULE-BASED</b> — gyro threshold + refractory (extends <code>CycleDetector</code>). Marks step boundaries + the unloaded-swing window.</div></div>
+      <div class="node"><div class="nm"><span class="step">②</span>Load Conditioner</div><div class="dl"><b>DSP</b> — session-start tare → 2nd-order polynomial calibration → relative load (% of baseline) · EMA smoothing.</div></div>
+      <div class="node"><div class="nm"><span class="step">③</span>Cue Decider</div><div class="dl"><b>THRESHOLD</b> — peak load per step vs target band · Schmitt deadband + min on/off → beep / haptic.</div></div>
+    </div>
+  </div>
+  <hr class="wire" data-label="③ ↑ in-band-step % + peaks   ·   ④ ↓ target band (% of own baseline)">
+  <div class="layer uno">
+    <span class="tag">UNO Q · per session / per week</span>
+    <h3>④ set &amp; fade the target band</h3>
+    <div class="row center">
+      <div class="node deep" style="flex-basis:620px"><div class="nm"><span class="step">④</span>Threshold Engine</div><div class="dl">baseline = percentile of per-step-peak load distribution (setup walk) · target faded −10%/week (≈60%→30%) · advance only when ≥80% of a week's steps land in-band</div></div>
+    </div>
+  </div>
+
+  <div class="cards" style="margin-top:18px">
+    <div class="card safe"><h4>🔁 Tare strategy (ADR-0010, amended)</h4><p>WSFC tares the barometer <b>once at session start</b>, after a brief grip/thermal equilibration, with a clinician one-button manual re-zero — <i>not</i> per-swing auto-tare (that is rescoped to the long, unsupervised wellness app). The Segmenter's swing detection is used for <b>step segmentation only, decoupled from the load zero</b>, so a missed swing can't inject a bad re-zero into a safety cue. Because the target is a % of a baseline measured in the same session after equilibration, slow common-mode drift largely cancels in the ratio.</p></div>
+    <div class="card warn"><h4>⛔ Claim-safety binds the loop (ADR-0009)</h4><p>The target is always <b>% of the Patient's own baseline cane-dependence — never %-body-weight, never an absolute-force claim</b>; kgf is bench-calibration / optional clinician readout only. No diagnosis, no fall-risk. ML is foreclosed from exactly the "abnormality / fall-risk" outputs the boundary bans.</p></div>
+    <div class="card"><h4>📉 Honest evidence framing</h4><p>The pressure-sensor + auditory-cue class did <b>not</b> reach significance for gait speed in the Wang 2025 meta-analysis (SMD 0.30, P=0.05); supportive effects are on loading &amp; muscle-activation (Jung, Kang, Tamburella). WSFC's pitch is generating our own evidence — see <a href="../rehab/wsfc-processing-references.md">rehab/wsfc-processing-references.md</a>.</p></div>
+  </div>
 
   <!-- ============ 3. METRICS ============ -->
-  <h2><span class="num">3</span>The six metrics — IMU-only build</h2>
-  <p class="lead">All six come from the IMU alone. Four temporal metrics are reliable absolutes; the two spatial metrics are trend-only. Two loading metrics drop one notch — measured from IMU <i>stillness</i> rather than from force — and would tighten to Tier 1 if an FSR is added.</p>
+  <h2><span class="num">3</span>Sensor → signal → metric</h2>
+  <p class="lead">Temporal metrics are the reliable headline numbers; spatial metrics are trend-only; loading metrics are relative/per-user — and are <b>WSFC's headline signals</b>, gated on the pneumatic build. Tiers per <a href="./FEATURES.md">FEATURES.md</a> §2.</p>
   <table>
-    <thead><tr><th>Metric</th><th>Module</th><th>IMU-only signals</th><th>Formula / method</th><th>Tier (IMU-only)</th></tr></thead>
+    <thead><tr><th>Metric</th><th>Source signal</th><th>Formula / method</th><th>Tier</th><th>Used by</th></tr></thead>
     <tbody>
-      <tr><td><b>Gait cycle time</b></td><td>Gait Metric Engine</td><td>plant timestamps (angular-rate ≈ 0 + impact)</td><td><code>t_plant[n] − t_plant[n−1]</code></td><td><span class="tier a">Absolute</span></td></tr>
-      <tr><td><b>Cadence</b></td><td>Gait Metric Engine</td><td>plant timestamps</td><td><code>60 / cycle_time</code></td><td><span class="tier a">Absolute</span></td></tr>
-      <tr><td><b>Stride length</b></td><td>Distance Estimator</td><td>gyro angle θ · stick length L · IMU-stillness ZUPT</td><td><code>L · sin(θ)</code>, ZUPT-bounded</td><td><span class="tier b">Trend-only</span></td></tr>
-      <tr><td><b>Gait velocity</b></td><td>Estimator + Engine</td><td>stride × cadence</td><td><code>stride_length · cadence</code></td><td><span class="tier b">Trend-only</span></td></tr>
-      <tr><td><b>Duty factor</b><div style="color:var(--muted);font-size:.78rem">planted fraction</div></td><td>Gait Metric Engine</td><td>IMU-stillness "planted" window ÷ cycle</td><td><code>planted_dur / cycle_time</code></td><td><span class="tier c">Inferred → FSR ⇒ Absolute</span></td></tr>
-      <tr><td><b>Stance time</b><div style="color:var(--muted);font-size:.78rem">planted-duration proxy</div></td><td>Gait Metric Engine</td><td>IMU-stillness "planted" interval</td><td><code>planted_duration</code></td><td><span class="tier c">Inferred → FSR ⇒ Absolute</span></td></tr>
+      <tr><td><b>Stick cycle time</b></td><td>plant timestamps (IMU)</td><td><code>t_plant[n] − t_plant[n−1]</code></td><td><span class="tier a">Tier 1 · reliable</span></td><td>all</td></tr>
+      <tr><td><b>Cadence</b></td><td>plant timestamps (IMU)</td><td><code>60 / cycle_time</code></td><td><span class="tier a">Tier 1 · reliable</span></td><td>all</td></tr>
+      <tr><td><b>Stick Duty Factor</b></td><td>IMU-stillness "planted" window</td><td><code>planted_dur / cycle_time</code></td><td><span class="tier a">Tier 1 · reliable</span></td><td>WSFC · wellness</td></tr>
+      <tr><td><b>Stride length</b></td><td>gyro angle θ · stick length L · ZUPT</td><td><code>L · sin(θ)</code>, ZUPT-bounded</td><td><span class="tier b">Tier 2 · trend-only</span></td><td>wellness</td></tr>
+      <tr><td><b>Gait velocity</b></td><td>stride × cadence</td><td><code>stride_length · cadence</code></td><td><span class="tier b">Tier 2 · trend-only</span></td><td>wellness</td></tr>
+      <tr><td><b>Handle Load (relative)</b></td><td>barometer peak per step</td><td>% of own baseline (tared, polynomial cal)</td><td><span class="tier c">Tier 3 · relative</span></td><td>WSFC</td></tr>
+      <tr><td><b>Weight Support Target compliance</b></td><td>peak load vs target band</td><td>in-band-step %</td><td><span class="tier c">Tier 3 · relative</span></td><td>WSFC</td></tr>
     </tbody>
   </table>
 
-  <!-- ============ 4. CALIBRATION ============ -->
-  <h2><span class="num">4</span>Calibration &amp; per-user Baseline</h2>
-  <div class="cards">
-    <div class="card"><h4>Mode &amp; stick length L</h4><p>Cane vs Walker is set manually at setup (ADR-0002) and selects the Distance Estimator's model. Stick length L is the geometric scale for every spatial metric — <code>L·sin(θ)</code> is meaningless without it.</p></div>
-    <div class="card warn"><h4>FSR grip threshold — N/A in this build</h4><p>The designed per-user FSR load threshold (PRD US-4) doesn't apply yet — there's no FSR. Its stand-in is the IMU motion/stillness threshold that decides "planted vs swinging". Re-enable the load calibration when an FSR is added.</p></div>
-    <div class="card"><h4>Continuous Baseline → Drift</h4><p>The device learns this user's own normal on-device. Only <b>sustained</b> Drift raises an Alert; a single odd walk must not. Because trends are user-vs-self, any constant stride underestimation cancels out for change-detection.</p></div>
+  <!-- ============ 4. STICK CYCLE ============ -->
+  <h2><span class="num">4</span>One Stick Cycle — what the sensors see</h2>
+  <p class="lead">One Stick Cycle (plant → load → push → swing) runs in phase with gait — a proxy, not identical to it. The <b>LOAD</b> peak is where the Cue Decider makes its once-per-step decision; the <b>SWING</b> phase (cane in air, load ≈ 0) is the natural load-zero reference.</p>
+  <div class="phases">
+    <div class="phase">
+      <div class="seq">PHASE 1</div><div class="ph">Plant</div>
+      <div class="imu"><b>IMU:</b> angular rate → 0 + accel impact → plant event &amp; ZUPT reset</div>
+      <div class="ld"><b>Load:</b> rises as weight transfers to the cane</div>
+    </div>
+    <div class="phase peak">
+      <div class="seq">PHASE 2</div><div class="ph">Load</div>
+      <div class="imu"><b>IMU:</b> stick near-vertical, low angular rate</div>
+      <div class="ld"><b>Load:</b> peak — <b>Cue Decider samples here</b> (once per step)</div>
+    </div>
+    <div class="phase">
+      <div class="seq">PHASE 3</div><div class="ph">Push</div>
+      <div class="imu"><b>IMU:</b> acceleration along shaft; angular rate rising</div>
+      <div class="ld"><b>Load:</b> decaying</div>
+    </div>
+    <div class="phase zero">
+      <div class="seq">PHASE 4</div><div class="ph">Swing</div>
+      <div class="imu"><b>IMU:</b> gyro integrates swing arc θ; high angular rate</div>
+      <div class="ld"><b>Load ≈ 0:</b> the load-zero reference (wellness re-zeros here)</div>
+    </div>
   </div>
 
-  <!-- ============ 5. HARDWARE NOTE ============ -->
-  <h2><span class="num">5</span>Hardware reality check</h2>
+  <!-- ============ 5. SECONDARY APPS ============ -->
+  <h2><span class="num">5</span>Secondary applications (same hardware)</h2>
   <div class="cards">
-    <div class="card"><h4>✅ IMU covers all six</h4><p>LSM9DS1 ranges (±2000 dps / ±16 g, up to 952 Hz) comfortably exceed cane motion. 100–200 Hz resolves plant impacts and the swing arc. No second sensor is required to produce any metric.</p></div>
-    <div class="card warn"><h4>⚠️ FSR &amp; ToF not in hand</h4><p>The docs design in a multi-FSR Handle Load grip and a ToF tip sensor; neither is acquired. Effect: stance time &amp; duty factor are <i>motion-inferred</i>, not force-measured; and the offline Proximity Alert can't run without the ToF.</p></div>
-    <div class="card"><h4>🔌 Constraints &amp; upgrades</h4><p>3.3 V only — any future FSR drives off 3.3 V to one analog pin (~$5–15). No onboard charger; no microphone (plain Nano 33 BLE, not the Sense). UART protocol &amp; BLE GATT are hand-rolled.</p></div>
+    <div class="card"><h4>🩺 Wellness gait monitoring</h4><p>The UNO Q learns the User's <b>Baseline</b> and scores sustained <b>Drift</b> to raise a non-medical <b>Alert</b> (single anomaly ≠ Alert). Measure-and-trend only (ADR-0001/0005); real-time cues only if Training Mode is opted in (ADR-0006). Per-swing auto-tare lives here.</p></div>
+    <div class="card"><h4>🗣️ Speaking Stick</h4><p>Orthogonal see-and-speak layer (ADR-0003): camera → cloud VLM → TTS, plus an offline <b>Proximity Alert</b> (gated on the ToF). Not part of the WSFC clinical story.</p></div>
+    <div class="card warn"><h4>🚫 What we cannot measure</h4><p>No leg stance time (the handle is loaded, not the foot), no ground reaction force, no absolute force / Newtons, no %-body-weight, no diagnosis, no fall-risk. Binds <b>all</b> applications (FEATURES.md, CONTEXT.md Claim Safety).</p></div>
   </div>
 
   <footer>
-    Moon Walk — gait-sensing architecture, <b>IMU-only build</b> · Cane Mode shown (Walker Mode swaps the Distance Estimator internals for wheel-encoder odometry and needs dual-grip FSRs not in hand).<br>
-    Sources: docs/PRD.md, CONTEXT.md, FEATURES.md, ADR-0001/0002/0004/0005. FSR Handle Load &amp; ToF are designed but not yet acquired; sample rates &amp; UART packet design are an engineering budget, not yet pinned in the docs.
+    Moon Walk — WSFC flagship architecture. Cane Mode shown (Walker Mode swaps the distance method for wheel-encoder odometry and needs dual-grip pneumatic pads, not acquired).<br>
+    Sources: ADR-0004 (two boards), ADR-0009 (WSFC pivot), ADR-0010 (pneumatic Handle Load + tare amendment), ADR-0011 (rule-based + DSP loop), <a href="../rehab/wsfc-processing-references.md">rehab/wsfc-processing-references.md</a>. Generated from <code>docs/architecture.md</code> — edit there and regenerate. Sample rates &amp; UART packet design are an engineering budget, not yet pinned; the pneumatic sensor is unbuilt and unvalidated.
   </footer>
 
 </div>

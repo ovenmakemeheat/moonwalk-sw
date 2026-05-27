@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moon Walk — Metrics: what we show & how we compute it</title>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#141b30; --panel-2:#1b2440; --ink:#e7ecf5; --muted:#9aa7c2;
+    --line:#2c3a5e; --nano:#4fd1c5; --uno:#f6ad55; --phone:#b794f4;
+    --t1:#68d391; --t2:#f6ad55; --t3:#b794f4; --t4:#5b8def; --future:#7c89a8; --accent:#5b8def;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 24px 80px}
+  header.title{text-align:center;margin-bottom:8px}
+  h1{font-size:2.05rem;margin:0 0 6px;letter-spacing:-.02em}
+  .sub{color:var(--muted);font-size:1.02rem;margin:0 auto 18px;max-width:760px;text-align:center}
+  .pill{display:inline-block;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+  h2{font-size:1.35rem;margin:46px 0 8px;padding-bottom:8px;border-bottom:1px solid var(--line);letter-spacing:-.01em}
+  h2 .num{color:var(--accent);margin-right:10px;font-variant-numeric:tabular-nums}
+  p.lead{color:var(--muted);margin-top:0}
+
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin:10px 0 18px}
+  .legend span{display:inline-flex;align-items:center;gap:7px;font-size:.8rem;color:var(--muted)}
+  .sw{width:13px;height:13px;border-radius:4px;display:inline-block}
+
+  /* signal chips */
+  .signals{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}
+  .sig{flex:1 1 200px;background:#0f1626;border:1px solid var(--line);border-radius:11px;padding:13px 15px}
+  .sig.imu{border-color:color-mix(in srgb,var(--nano) 45%,var(--line))}
+  .sig.baro{border-color:color-mix(in srgb,var(--uno) 45%,var(--line));background:repeating-linear-gradient(45deg,#1a1405,#1a1405 8px,#201907 8px,#201907 16px)}
+  .sig .h{font-weight:700;font-size:.95rem} .sig.imu .h{color:var(--nano)} .sig.baro .h{color:var(--uno)}
+  .sig .d{color:var(--muted);font-size:.82rem;margin-top:4px}
+
+  /* metric card */
+  .metric{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px;margin:16px 0;position:relative}
+  .metric .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+  .metric .nm{font-size:1.12rem;font-weight:800;letter-spacing:-.01em}
+  .badge{font-size:.66rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;white-space:nowrap;border:1px solid}
+  .badge.t1{color:var(--t1);border-color:color-mix(in srgb,var(--t1) 45%,transparent);background:color-mix(in srgb,var(--t1) 14%,transparent)}
+  .badge.t2{color:var(--t2);border-color:color-mix(in srgb,var(--t2) 45%,transparent);background:color-mix(in srgb,var(--t2) 12%,transparent)}
+  .badge.t3{color:var(--t3);border-color:color-mix(in srgb,var(--t3) 45%,transparent);background:color-mix(in srgb,var(--t3) 12%,transparent)}
+  .badge.t4{color:var(--t4);border-color:color-mix(in srgb,var(--t4) 45%,transparent);background:color-mix(in srgb,var(--t4) 12%,transparent)}
+  .badge.live{color:var(--t1);border-color:color-mix(in srgb,var(--t1) 50%,transparent)}
+  .badge.gated{color:var(--future);border-color:var(--future)}
+  .badge.trend{color:var(--t2);border-color:color-mix(in srgb,var(--t2) 50%,transparent)}
+  .metric .chain{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0 6px;font-size:.84rem}
+  .metric .chain .box{background:#0f1626;border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--muted)}
+  .metric .chain .box b{color:var(--ink)}
+  .metric .chain .ar{color:var(--accent);font-size:1.1rem}
+  .formula{background:#0c1322;border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));border-radius:9px;padding:12px 14px;margin:10px 0;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.92rem;color:#dbe5ff;overflow-x:auto}
+  .formula .v{color:var(--nano)} .formula .c{color:var(--muted)} .formula sub{font-size:.7em}
+  .note{color:var(--muted);font-size:.85rem;margin:6px 0 0}
+  .note.safe{color:#a8d8b9} .note.warn{color:#e7c79a}
+  .cite{font-size:.78rem;color:var(--muted);margin-top:8px} .cite code{background:#0f1626;padding:1px 5px;border-radius:4px;color:#c5d3f0}
+
+  /* interactive calculator */
+  .calc{background:#0c1322;border:1px dashed color-mix(in srgb,var(--accent) 45%,var(--line));border-radius:10px;padding:14px;margin-top:12px}
+  .calc .ct{font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+  .ctrl{display:flex;align-items:center;gap:12px;margin:8px 0;flex-wrap:wrap}
+  .ctrl label{font-size:.85rem;color:var(--muted);min-width:200px}
+  .ctrl input[type=range]{flex:1 1 160px;accent-color:var(--accent)}
+  .ctrl input[type=number]{width:80px;background:#0f1626;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:5px 8px;font-size:.85rem}
+  .ctrl .val{font-variant-numeric:tabular-nums;color:var(--nano);font-weight:700;min-width:64px;text-align:right}
+  .out{display:flex;align-items:baseline;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  .out .lab{font-size:.8rem;color:var(--muted)}
+  .out .big{font-size:1.7rem;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
+  .out .u{font-size:.9rem;color:var(--muted)}
+  .bar{height:14px;border-radius:7px;background:#0f1626;border:1px solid var(--line);overflow:hidden;margin-top:10px;position:relative}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--t1),var(--accent));transition:width .12s}
+  .stepwrap{display:flex;gap:6px;align-items:flex-end;height:90px;margin-top:10px}
+  .stepwrap .s{flex:1;border-radius:4px 4px 0 0;background:var(--t1);position:relative;transition:height .1s,background .1s}
+  .stepwrap .s.over{background:var(--uno)}
+  .thline{position:relative;height:0;border-top:2px dashed var(--phone)} .thline::after{content:"target";position:absolute;right:0;top:-16px;font-size:.68rem;color:var(--phone)}
+
+  footer{margin-top:60px;color:var(--muted);font-size:.8rem;text-align:center;border-top:1px solid var(--line);padding-top:20px}
+  footer a{color:var(--muted);text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="title">
+    <span class="pill">Moon Walk · Metrics Explainer</span>
+    <h1>What we show, and how we compute it</h1>
+    <p class="sub">Every Moon Walk number traces back to two raw signals. This page shows, for each metric, the input signals → the calculation → the output — with live calculators you can tweak. The flagship WSFC loop lives on the loading metrics (§3) and a Whoop-Strain-style composite (§4).</p>
+  </header>
+
+  <div class="legend">
+    <span><i class="sw" style="background:var(--t1)"></i> Tier 1 reliable</span>
+    <span><i class="sw" style="background:var(--t2)"></i> Tier 2 trend-only</span>
+    <span><i class="sw" style="background:var(--t3)"></i> Tier 3 relative loading</span>
+    <span><i class="sw" style="background:var(--t4)"></i> Tier 4 derived/composite</span>
+    <span><i class="sw" style="background:var(--t1)"></i> LIVE (IMU-only, buildable now)</span>
+    <span><i class="sw" style="background:var(--future)"></i> GATED (needs Handle Load sensor)</span>
+  </div>
+
+  <!-- =================== RAW SIGNALS =================== -->
+  <h2><span class="num">0</span>The two raw signals everything is built from</h2>
+  <div class="signals">
+    <div class="sig imu"><div class="h">IMU — LSM9DS1 (in hand)</div><div class="d">6-axis, ~100–200 Hz. Gives the swing-axis <b>angular rate (gyro)</b> and <b>acceleration</b>. From these: plant timestamps (rate→0 + impact spike), swing angle θ (gyro integral), L/R step timing, stillness windows.</div></div>
+    <div class="sig baro"><div class="h">Handle Load — LPS22HB + bladder (designed)</div><div class="d">Barometer reads trapped-air pressure under the grip. Tared at session start, mapped pressure→load by a fitted polynomial, expressed as <b>% of the patient's own baseline</b> — never Newtons, never %body-weight.</div></div>
+  </div>
+
+  <!-- =================== PRIMARY METRICS =================== -->
+  <h2><span class="num">1</span>Temporal metrics — reliable, IMU-only (live today)</h2>
+
+  <!-- cycle time -->
+  <div class="metric">
+    <div class="top"><span class="nm">Stick Cycle Time</span><span class="badge t1">Tier 1</span><span class="badge live">live</span></div>
+    <div class="chain"><span class="box">IMU: <b>plant timestamps</b></span><span class="ar">→</span><span class="box">consecutive-plant interval</span><span class="ar">→</span><span class="box"><b>cycle time</b> (s)</span></div>
+    <div class="formula"><span class="v">cycle_time</span> = t<sub>plant</sub>[n] − t<sub>plant</sub>[n−1]</div>
+    <p class="note">A plant is detected when angular rate crosses ~0 with an acceleration impact spike (a hysteresis crossing in the <code>CycleDetector</code>). One plant-to-plant interval = one Stick Cycle — a proxy for the gait cycle, not identical to it.</p>
+  </div>
+
+  <!-- cadence (interactive) -->
+  <div class="metric">
+    <div class="top"><span class="nm">Cadence</span><span class="badge t1">Tier 1</span><span class="badge live">live</span></div>
+    <div class="chain"><span class="box"><b>cycle time</b></span><span class="ar">→</span><span class="box">invert &amp; scale to /min</span><span class="ar">→</span><span class="box"><b>cadence</b> (cyc/min)</span></div>
+    <div class="formula"><span class="v">cadence</span> = 60000 / cycle_time<span class="c">_ms</span>  &nbsp;<span class="c">// exactly what realtime/hub.py computes, rolling-averaged</span></div>
+    <div class="calc">
+      <div class="ct">▶ try it — drag the cycle time</div>
+      <div class="ctrl"><label>Stick cycle time</label><input id="cy" type="range" min="600" max="2000" value="1100"><span class="val"><span id="cyV">1100</span> ms</span></div>
+      <div class="out"><span class="lab">cadence =</span><span class="big" id="cadOut">54.5</span><span class="u">cycles / min</span></div>
+    </div>
+  </div>
+
+  <!-- duty factor -->
+  <div class="metric">
+    <div class="top"><span class="nm">Stick Duty Factor</span><span class="badge t1">Tier 1</span><span class="badge live">live</span></div>
+    <div class="chain"><span class="box">IMU: <b>stillness window</b></span><span class="ar">→</span><span class="box">÷ cycle time</span><span class="ar">→</span><span class="box"><b>planted fraction</b></span></div>
+    <div class="formula"><span class="v">duty_factor</span> = planted_duration / cycle_time</div>
+    <p class="note">Fraction of the cycle the cane is planted (inferred from IMU stillness — crisper once the Handle Load sensor confirms "loaded"). <b>Not</b> leg stance time.</p>
+  </div>
+
+  <h2><span class="num">2</span>Spatial metrics — trend-only (IMU, never absolute)</h2>
+  <div class="metric">
+    <div class="top"><span class="nm">Stride Length &amp; Gait Velocity</span><span class="badge t2">Tier 2</span><span class="badge trend">trend-only</span></div>
+    <div class="chain"><span class="box">gyro <b>swing angle θ</b></span><span class="ar">→</span><span class="box">pendulum model</span><span class="ar">→</span><span class="box"><b>stride</b></span><span class="ar">→</span><span class="box">× cadence</span><span class="ar">→</span><span class="box"><b>velocity</b></span></div>
+    <div class="formula"><span class="v">stride</span> ≈ L · sin(θ)<span class="c"> &nbsp;(L = stick length, ZUPT-bounded)</span>&nbsp;&nbsp;&nbsp;<span class="v">velocity</span> = stride · cadence</div>
+    <p class="note warn">Presented only as change-over-time vs the user's own baseline — never as a clinical absolute. Requires one-time stick-length calibration; not yet validated against ground truth.</p>
+  </div>
+
+  <!-- =================== LOADING METRICS =================== -->
+  <h2><span class="num">3</span>Loading metrics — the WSFC's headline signals (gated on the Handle Load sensor)</h2>
+
+  <div class="metric">
+    <div class="top"><span class="nm">Handle Load (relative)</span><span class="badge t3">Tier 3</span><span class="badge gated">gated</span></div>
+    <div class="chain"><span class="box">barometer <b>pressure P</b></span><span class="ar">→</span><span class="box">− session tare</span><span class="ar">→</span><span class="box">polynomial cal</span><span class="ar">→</span><span class="box"><b>% of baseline</b></span></div>
+    <div class="formula"><span class="v">load</span> = a·(P−P<sub>tare</sub>)² + b·(P−P<sub>tare</sub>) + c<span class="c"> &nbsp;(quadratic fit, Marquardt 2022 form)</span>
+<span class="v">load%</span> = 100 · load / baseline_load</div>
+    <p class="note safe">Expressed as % of the patient's <b>own</b> measured baseline cane-dependence. kgf is bench-calibration / clinician readout only — never a marketed force or %body-weight.</p>
+    <div class="cite">Sensor evidence: barometer-in-elastomer force sensors <code>Marquardt 2022</code>, <code>Cerveri 2017</code>; drift-stable bubble sensor <code>Dabling 2012</code>.</div>
+  </div>
+
+  <!-- WS target compliance (interactive) -->
+  <div class="metric">
+    <div class="top"><span class="nm">Weight Support Target Compliance</span><span class="badge t3">Tier 3</span><span class="badge gated">gated</span></div>
+    <div class="chain"><span class="box">per-step <b>peak load</b></span><span class="ar">→</span><span class="box">vs target band</span><span class="ar">→</span><span class="box">count in-band</span><span class="ar">→</span><span class="box"><b>in-band %</b></span></div>
+    <div class="formula"><span class="v">in_band_%</span> = 100 · ( #steps with peak_load ≤ target ) / total_steps
+<span class="c">target faded −10%/week (≈60%→30% of baseline); advance week when in_band_% ≥ 80</span></div>
+    <div class="calc">
+      <div class="ct">▶ try it — set the target, then the per-step loads</div>
+      <div class="ctrl"><label>Weight Support Target (% of baseline)</label><input id="tg" type="range" min="20" max="80" value="50"><span class="val"><span id="tgV">50</span>%</span></div>
+      <div class="ctrl"><label>Patient "lean spread" (jitter)</label><input id="sp" type="range" min="0" max="40" value="18"><span class="val"><span id="spV">18</span></span></div>
+      <div class="stepwrap" id="steps"></div>
+      <div class="out"><span class="lab">in-band steps =</span><span class="big" id="ibOut">—</span><span class="u">→ <span id="advOut"></span></span></div>
+    </div>
+    <p class="note">Green = step at/below target (good, no cue); amber = over-lean (beep/haptic fires). The decision is made <b>once per step at the load peak</b>, with a Schmitt deadband to stop chattering (ADR-0011).</p>
+    <div class="cite">Threshold + fade protocol: <code>Kang 2021</code> (the WSFC namesake RCT), <code>Jung 2015</code> (originated the 60→30 fade); per-peak decision: <code>Tamburella 2021</code>.</div>
+  </div>
+
+  <!-- =================== DERIVED / COMPOSITE =================== -->
+  <h2><span class="num">4</span>Derived / composite metrics — the "score" layer</h2>
+  <p class="lead">Higher-order numbers built from the metrics above — a gait-quality score (live today) and a Whoop-Strain-style session dose (gated). All self-referenced to the patient's own baseline; never a population norm, never fall-risk.</p>
+
+  <!-- symmetry score (interactive) -->
+  <div class="metric">
+    <div class="top"><span class="nm">Step Rhythm &amp; Symmetry</span><span class="badge t4">Tier 4 derived</span><span class="badge live">live · IMU-only</span></div>
+    <div class="chain"><span class="box">L/R <b>step times</b></span><span class="ar">→</span><span class="box">symmetry ratio + step-time CV</span><span class="ar">→</span><span class="box"><b>0–100 quality score</b></span></div>
+    <div class="formula"><span class="v">SR</span> = min(t<sub>par</sub>, t<sub>nonpar</sub>) / max(t<sub>par</sub>, t<sub>nonpar</sub>)<span class="c"> &nbsp;(1.0 = perfectly symmetric)</span>
+<span class="v">consistency</span> = 1 − CV  &nbsp;<span class="c">CV = SD(step_time) / mean(step_time)</span>
+<span class="v">score</span> = 100 · (0.6·SR + 0.4·consistency)</div>
+    <div class="calc">
+      <div class="ct">▶ try it — paretic vs non-paretic step time + variability</div>
+      <div class="ctrl"><label>Paretic-side step time</label><input id="pp" type="range" min="400" max="900" value="640"><span class="val"><span id="ppV">640</span> ms</span></div>
+      <div class="ctrl"><label>Non-paretic step time</label><input id="np" type="range" min="400" max="900" value="520"><span class="val"><span id="npV">520</span> ms</span></div>
+      <div class="ctrl"><label>Step-time variability (CV)</label><input id="cv" type="range" min="0" max="30" value="9"><span class="val"><span id="cvV">9</span>%</span></div>
+      <div class="out"><span class="lab">symmetry ratio</span><span class="big" id="srOut">—</span><span class="u">· quality score <b id="scOut" style="color:var(--t1)"></b>/100</span></div>
+      <div class="bar"><i id="scBar"></i></div>
+    </div>
+    <p class="note safe">CV is surfaced as "step-timing <b>consistency / steadiness</b>" — never as fall risk (a banned framing). Trends toward SR = 1.0 and lower CV vs the patient's own baseline.</p>
+    <div class="cite">Symmetry ratio standardization: <code>Patterson 2010, Gait &amp; Posture</code> (707 cites); variability poststroke: <code>Chisholm 2014</code>; symmetry responds to therapy: <code>Yoshioka 2022</code>.</div>
+  </div>
+
+  <!-- session strain analog (interactive) -->
+  <div class="metric">
+    <div class="top"><span class="nm">Session Weight-Support Training Load</span><span class="badge t4">Tier 4 derived</span><span class="badge gated">gated · Whoop-Strain analog</span></div>
+    <div class="chain"><span class="box">relative load <b>intensity</b></span><span class="ar">×</span><span class="box">steps / duration</span><span class="ar">→</span><span class="box">cumulative integral</span><span class="ar">→</span><span class="box">log map <b>0–100</b></span></div>
+    <div class="formula"><span class="v">raw</span> = Σ<sub>steps</sub> ( lean_reduction · in_band_factor )<span class="c"> &nbsp;// TRIMP / session-RPE structure: intensity × volume</span>
+<span class="v">score</span> = 100 · log(1 + raw) / log(1 + raw_max)<span class="c"> &nbsp;// personalized, non-linear (easy early, harder later)</span></div>
+    <div class="calc">
+      <div class="ct">▶ try it — a session: how much did they walk, and how well did they lean?</div>
+      <div class="ctrl"><label>Steps walked this session</label><input id="st" type="range" min="0" max="1200" value="500"><span class="val"><span id="stV">500</span></span></div>
+      <div class="ctrl"><label>In-band compliance</label><input id="ib" type="range" min="0" max="100" value="72"><span class="val"><span id="ibV">72</span>%</span></div>
+      <div class="ctrl"><label>Lean reduction vs baseline</label><input id="lr" type="range" min="0" max="50" value="20"><span class="val"><span id="lrV">20</span>%</span></div>
+      <div class="out"><span class="lab">session load score</span><span class="big" id="tlOut">—</span><span class="u">/ 100</span></div>
+      <div class="bar"><i id="tlBar"></i></div>
+    </div>
+    <p class="note warn">Structure borrowed from training-load science (TRIMP / session-RPE) — <b>not</b> a claim of physiological equivalence to Whoop Strain (whose algorithm is proprietary &amp; unvalidated). A personal effort/progress figure relative to the patient's own baseline; not a clinical grade.</p>
+    <div class="cite">Load-dose structure: <code>García-Ramos 2015 (TRIMP)</code>, <code>Tibana 2018 (session-RPE)</code>; rehab loading dose: <code>Mercer 2009</code>, <code>Ribeiro 2019</code>; Whoop signals (not Strain) validated: <code>Miller 2022</code>.</div>
+  </div>
+
+  <!-- cane reliance + walk ratio (interactive) -->
+  <div class="metric">
+    <div class="top"><span class="nm">Cane-Reliance &amp; Walk-Ratio Trend</span><span class="badge t4">Tier 4 derived</span><span class="badge gated">gated · partly speculative</span></div>
+    <div class="chain"><span class="box">relative load over <b>weeks</b></span><span class="ar">→</span><span class="box">cane-reliance trend</span><span class="ar">&nbsp;&nbsp;</span><span class="box">stride-proxy ÷ cadence</span><span class="ar">→</span><span class="box"><b>walk ratio</b></span></div>
+    <div class="formula"><span class="v">cane_reliance</span> = mean(load%) per session, trended week-over-week  <span class="c">// ↓ = weaning off the cane</span>
+<span class="v">walk_ratio</span> = step_length / cadence  <span class="c">// speed-independent coordination index, baseline-normalized</span></div>
+    <div class="calc">
+      <div class="ct">▶ try it — walk ratio (note: stride is trend-only, so this is normalized to baseline)</div>
+      <div class="ctrl"><label>Step-length proxy</label><input id="sl" type="range" min="200" max="700" value="430"><span class="val"><span id="slV">430</span> mm</span></div>
+      <div class="ctrl"><label>Cadence</label><input id="cd" type="range" min="40" max="120" value="90"><span class="val"><span id="cdV">90</span> /min</span></div>
+      <div class="out"><span class="lab">walk ratio</span><span class="big" id="wrOut">—</span><span class="u">mm·min/step · <span id="wrNote"></span></span></div>
+    </div>
+    <p class="note warn">Long-horizon trends, not a single-session readout. <b>Partly speculative for us:</b> a true Walk Ratio needs <i>absolute</i> step length (we have a trend only), and cane-reliance needs the unbuilt Handle Load sensor — so both are shown as personal trend lines, never absolutes.</p>
+    <div class="cite">Walk-ratio validity: <code>Rota 2011</code>, <code>Kalron 2016</code> (both MS populations — note); cane-load weaning rationale: <code>Mercer 2009</code>, <code>Jung 2020</code>. ⚠️ <code>Nagasaki 1996</code> verified as "Walking Patterns &amp; Finger Rhythm of Older Adults" — re-check before citing for walk-ratio constancy.</div>
+  </div>
+
+  <footer>
+    Moon Walk — metric derivation explainer. Live calculators are illustrative (the real pipeline runs on-device, rule-based + DSP, ADR-0011). Loading &amp; Strain-analog metrics are gated on the unbuilt pneumatic Handle Load sensor (ADR-0010).<br>
+    Sources: <a href="./architecture.md">architecture.md</a> · <a href="../rehab/wsfc-processing-references.md">wsfc-processing-references.md</a> · derived-metric citations verified via Semantic Scholar. Claim-safety: every score is relative to the patient's own baseline — never %body-weight, absolute force, fall-risk, or a population norm.
+  </footer>
+
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+
+  // --- Cadence ---
+  function cadence(){
+    const ms = +$('cy').value; $('cyV').textContent = ms;
+    $('cadOut').textContent = (60000/ms).toFixed(1);
+  }
+  $('cy').addEventListener('input', cadence); cadence();
+
+  // --- WS Target compliance ---
+  const N = 14;
+  let seed = 7;
+  const rnd = () => { seed = (seed*9301+49297)%233280; return seed/233280; };
+  let loads = [];
+  function regen(){ seed=7; loads = Array.from({length:N}, ()=> 38 + (rnd()-0.5)*2); }
+  regen();
+  function compliance(){
+    const tg = +$('tg').value, sp = +$('sp').value;
+    $('tgV').textContent = tg; $('spV').textContent = sp;
+    // build per-step loads around ~ (tg-2) with the chosen jitter
+    seed = 7;
+    const wrap = $('steps'); wrap.innerHTML='';
+    let over=0;
+    const center = tg - 4; // patient trying to stay just under target
+    for(let i=0;i<N;i++){
+      const L = clamp(center + (rnd()-0.45)*sp*2, 8, 95);
+      const isOver = L > tg;
+      if(isOver) over++;
+      const s = document.createElement('div');
+      s.className = 's' + (isOver?' over':'');
+      s.style.height = L + '%';
+      s.title = 'peak load ' + L.toFixed(0) + '% of baseline';
+      wrap.appendChild(s);
+    }
+    const inband = Math.round(100*(N-over)/N);
+    $('ibOut').textContent = inband + '%';
+    $('advOut').innerHTML = inband>=80
+      ? '<b style="color:var(--t1)">advance target next week ✓</b>'
+      : '<span style="color:var(--uno)">hold target (need ≥80%)</span>';
+  }
+  ['tg','sp'].forEach(id=>$(id).addEventListener('input',compliance)); compliance();
+
+  // --- Symmetry & consistency score ---
+  function symmetry(){
+    const p=+$('pp').value, n=+$('np').value, cv=+$('cv').value;
+    $('ppV').textContent=p; $('npV').textContent=n; $('cvV').textContent=cv;
+    const sr = Math.min(p,n)/Math.max(p,n);
+    const consistency = clamp(1 - cv/100, 0, 1);
+    const score = Math.round(100*(0.6*sr + 0.4*consistency));
+    $('srOut').textContent = sr.toFixed(2);
+    $('scOut').textContent = score;
+    $('scBar').style.width = score + '%';
+  }
+  ['pp','np','cv'].forEach(id=>$(id).addEventListener('input',symmetry)); symmetry();
+
+  // --- Session training load (Strain analog) ---
+  function load(){
+    const st=+$('st').value, ib=+$('ib').value, lr=+$('lr').value;
+    $('stV').textContent=st; $('ibV').textContent=ib; $('lrV').textContent=lr;
+    // raw = volume(steps) * quality(in-band) * intensity(lean reduction)
+    const raw = st * (ib/100) * (lr/100);
+    const rawMax = 1200 * 1.0 * 0.5; // best-case anchor
+    const score = Math.round(100 * Math.log(1+raw) / Math.log(1+rawMax));
+    $('tlOut').textContent = clamp(score,0,100);
+    $('tlBar').style.width = clamp(score,0,100) + '%';
+  }
+  ['st','ib','lr'].forEach(id=>$(id).addEventListener('input',load)); load();
+
+  // --- Walk ratio (Cane-Reliance & Walk-Ratio Trend) ---
+  const WR_BASE = 430/90; // baseline walk ratio anchor
+  function walkratio(){
+    const sl=+$('sl').value, cd=+$('cd').value;
+    $('slV').textContent=sl; $('cdV').textContent=cd;
+    const wr = sl/cd;
+    $('wrOut').textContent = wr.toFixed(2);
+    const pct = Math.round(100*(wr-WR_BASE)/WR_BASE);
+    $('wrNote').innerHTML = pct===0 ? 'at baseline'
+      : (pct>0 ? '<b style="color:var(--t1)">+'+pct+'% vs baseline</b>'
+               : '<span style="color:var(--uno)">'+pct+'% vs baseline</span>');
+  }
+  ['sl','cd'].forEach(id=>$(id).addEventListener('input',walkratio)); walkratio();
+</script>
+</body>
+</html>

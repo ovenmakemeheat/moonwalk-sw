@@ -31,8 +31,14 @@ and `docs/pneumatic-bladder-build.html`.
 - Handle Load = trapped-air pressure under the grip, read by the LPS22HB; soft bladder under
   the **handle** (rejected: rigid piston in the ferrule); operate near the bottom of the
   pressure range with per-step auto-tare.
-- Calibrate once on a bathroom scale (5/10/20/30 kgf), fit linear/mild-polynomial → kgf
-  on-device (the same method instrumented-crutch researchers use against force plates).
+- Calibrate once on a bathroom scale (5/10/20/30 kgf), fit a **2nd-order polynomial** →
+  kgf on-device. (Marquardt et al. 2022's barometer-in-silicone force sensor is "almost
+  linear" but is best fit by a quadratic, R²≈0.996 — a straight line under-fits the
+  elastomer's mild nonlinearity. See [`rehab/wsfc-processing-references.md`].)
+- **Tare strategy is per-application** (amended 2026-05-27, see below): the WSFC rehab
+  application uses a **session-start tare after thermal equilibration**, *not* the
+  per-swing auto-tare. Per-swing auto-tare is rescoped to the long, unsupervised
+  wellness-monitoring application.
 - Glossary updated: **Handle Load** and the **Sensor suite** in [`CONTEXT.md`] now describe
   the pneumatic/barometer sensor; "FSR" / "load cell" are retired terms for this signal.
 
@@ -61,6 +67,49 @@ and `docs/pneumatic-bladder-build.html`.
 - ToF Distance remains the only un-acquired sensor; Stick Cycle phase still falls back to
   IMU stillness until it lands.
 
+## Amendment (2026-05-27): per-swing auto-tare is a wellness-mode feature, not a WSFC requirement
+
+This ADR's original "the IMU auto-tares the baseline **every gait cycle**" framing was
+inherited from the all-day, unsupervised wellness-monitoring use case. For the **WSFC rehab
+application** it is **over-engineering**, and is replaced by a **session-start tare after a
+brief thermal equilibration**, plus a clinician one-button manual re-zero.
+
+**Why the reversal (evidence in [`rehab/wsfc-processing-references.md`]):**
+- *Our sensor architecture is the most drift-stable, not the least.* Dabling et al. 2012
+  benchmarked five interface-pressure sensors; the fluid/air-bubble pressure sensor (= our
+  bladder + barometer) had the **lowest drift of all** — 2.3% static (18 h), 2.8% hysteresis,
+  1.8% cyclic (vs FSRs 6–21%, capacitive 24%). Scaled to a ~30-minute supervised rehab
+  session ([ADR-0009] dose), residual zero-drift is small.
+- *Thermal drift is the dominant mechanism, and it is front-loaded and asymptotic* — largest
+  in the first minutes after gripping the warm handle, then settles. Marquardt et al. 2022 —
+  the only barometer-in-elastomer analog — handles it with **~10 min equilibration + a single
+  per-trial offset, explicitly because trials are short**, and does **not** re-tare continuously.
+- *No clinical PWB system re-tares per step.* Jung 2015, Kang 2021, and Tamburella 2021 all
+  zero once per session (in fact none documents a tare procedure at all — a session-start tare
+  is something we are *inventing*, grounded in Marquardt, not copying).
+- *The relative-to-baseline decision cancels common-mode drift.* The over-lean target is a %
+  of the patient's baseline cane-dependence measured **after** equilibration in the same
+  session; a slowly-drifting zero shifts the live reading and the baseline together and
+  largely subtracts out of the ratio.
+- *Per-swing auto-tare adds a failure path.* It couples the load zero to correct IMU swing
+  detection; a missed or false swing injects a bad re-zero into a **safety beep**. Fewer
+  coupled failure paths is safer.
+
+**Decision (amended):**
+- **WSFC rehab application:** session-start tare after the patient grips and the bladder
+  equilibrates (fold into the setup walk that measures baseline cane-dependence, so baseline
+  and live readings share the same settled offset); clinician manual re-zero available. The
+  IMU's swing detection is kept for **step segmentation only**, decoupled from the load zero.
+- **Wellness-monitoring application:** per-swing auto-tare (and/or a slowly-updated
+  differential baseline, per Manivannan et al. 2020) is retained — that long, unsupervised,
+  environment-varying regime is what it is actually for.
+
+**Build note:** to keep bladder hysteresis low, place the bladder **in series with the load
+path** and minimise surrounding viscoelastic bulk (Wheeler et al. 2011 found hysteresis is
+driven by molding the sensor *into* the elastomer). Micro-leak rate is undocumented in the
+literature — **bench-verify the seal** on the actual hardware (a glued joint must hold a
+squeeze ≥10 s).
+
 ## Prior art (the technique is established; the application is novel)
 
 Barometer-as-load-cell is peer-reviewed, not invented here. Encapsulating a MEMS barometer in
@@ -78,9 +127,10 @@ Yu 2014: clinicians "unable to gauge" it), and real-time biofeedback beats scale
 
 ## Status
 
-accepted. Supersedes the multi-FSR grip assumption carried in earlier docs/ADRs. Design is
-prototyped in `docs/pneumatic-load-sensing.html`; bench calibration + leak/drift validation
-are pending.
+accepted; amended 2026-05-27 (tare strategy is per-application: WSFC uses session-start
+tare, not per-swing auto-tare — see Amendment above). Supersedes the multi-FSR grip
+assumption carried in earlier docs/ADRs. Design is prototyped in
+`docs/pneumatic-load-sensing.html`; bench calibration + leak/drift validation are pending.
 
 [DOI 10.1109/TOH.2016.2636822]: https://doi.org/10.1109/TOH.2016.2636822
 [DOI 10.3390/mi13112051]: https://doi.org/10.3390/mi13112051
@@ -89,4 +139,5 @@ are pending.
 [ADR-0001]: ./0001-measure-and-trend-not-diagnostic.md
 [ADR-0009]: ./0009-pivot-to-weight-support-feedback-cane.md
 [`CONTEXT.md`]: ../../CONTEXT.md
+[`rehab/wsfc-processing-references.md`]: ../../rehab/wsfc-processing-references.md
 [`docs/FEATURES.md`]: ../FEATURES.md

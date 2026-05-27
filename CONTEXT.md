@@ -38,7 +38,8 @@ Moon Walk's **flagship application**: the Moon Walk sensor on a cane, running a 
 weight-support biofeedback loop that trains a rehab **Patient** to load the affected leg
 instead of over-leaning on the cane. It reads **Handle Load** per step, compares it to the
 **Weight Support Target**, and cues the Patient (auditory/haptic) when out of band. Not a
-separate device — an application/mode of the Moon Walk sensor. See [ADR-0009].
+separate device — an application/mode of the Moon Walk sensor. The feedback loop is
+**rule-based + DSP** (not ML). See [ADR-0009], [ADR-0011].
 _Avoid_: treating WSFC as a new cane to buy (it is the sensor attached to the user's own cane).
 
 **Gait**:
@@ -60,9 +61,11 @@ on the board — see [ADR-0010] and `docs/pneumatic-load-sensing.html`. Temp/hum
 > **Hardware in hand (2026-05): IMU + barometer.** Physically acquired: the Arduino
 > Nano 33 BLE's onboard **LSM9DS1 IMU** (6-axis; magnetometer ignored) and **LPS22HB
 > barometer** (260–1260 hPa). **Handle Load is measured pneumatically** — a soft sealed
-> bladder under the grip pipes trapped-air pressure to the barometer; the IMU
-> **auto-tares** the baseline every swing phase (cane in air = zero load) to cancel
-> thermal drift, creep, and leak. This *replaces the previously-planned multi-FSR grip*
+> bladder under the grip pipes trapped-air pressure to the barometer; the zero is
+> **tared** to cancel thermal drift/creep/leak — **once at session start** for the
+> supervised ~30-min WSFC application, or **each swing phase** (IMU: cane in air = zero
+> load) for long unsupervised wellness wear (per-application, see [ADR-0010]). This
+> *replaces the previously-planned multi-FSR grip*
 > (no FSR, ~$0 BOM add). The only remaining un-acquired sensor is the **ToF Distance**;
 > until it lands, the **Proximity Alert** (ToF → buzzer/haptic) cannot run, and Stick
 > Cycle phase falls back to IMU stillness. See `docs/architecture.html`.
@@ -80,10 +83,10 @@ _Avoid_: confusing with **leg stance time**, which Moon Walk cannot directly mea
 **Handle Load**:
 Force the user pushes through the handle, sensed **pneumatically**: a soft sealed air
 bladder under the grip is compressed by the load, raising trapped-air pressure that the
-onboard **LPS22HB barometer** reads (P = F / A); a bench calibration maps pressure → kgf,
-and the IMU swing-phase **auto-tare** re-zeros drift each cycle. This — not ground
-reaction force — is Moon Walk's measure of **Weight Bearing** and its strongest
-limp/offload signal. In cane mode it **doubles as the stance anchor** that resets the
+onboard **LPS22HB barometer** reads (P = F / A); a bench calibration (2nd-order polynomial)
+maps pressure → kgf, and a **tare** re-zeros drift (cadence is per-application — see [ADR-0010]).
+This — not ground reaction force — is Moon Walk's measure of **Weight Bearing** and its
+strongest limp/offload signal. In cane mode it **doubles as the stance anchor** that resets the
 Pendulum Model's drift each footfall (ZUPT). Accuracy is a repeatable *relative* trend
 (~10–20%), framed as a compliance signal, not a scale.
 _Avoid_: "ground force", "weight" (body weight), "FSR"/"load cell" (the sensor is a
@@ -361,3 +364,5 @@ Two boards over wired UART — see [ADR-0004].
 [ADR-0008]: ./docs/adr/0008-walk-buddies-emerald-gamification.md
 [ADR-0009]: ./docs/adr/0009-pivot-to-weight-support-feedback-cane.md
 [ADR-0010]: ./docs/adr/0010-pneumatic-barometer-handle-load.md
+[ADR-0011]: ./docs/adr/0011-wsfc-real-time-processing-rule-based-dsp.md
+[ADR-0012]: ./docs/adr/0012-where-ml-earns-its-place-on-moonwalk-data.md
