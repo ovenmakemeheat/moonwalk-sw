@@ -94,7 +94,7 @@
     <span><i class="sw" style="background:var(--t3)"></i> Tier 3 relative loading</span>
     <span><i class="sw" style="background:var(--t4)"></i> Tier 4 derived/composite</span>
     <span><i class="sw" style="background:var(--t1)"></i> LIVE (IMU-only, buildable now)</span>
-    <span><i class="sw" style="background:var(--future)"></i> GATED (needs Handle Load sensor)</span>
+    <span><i class="sw" style="background:var(--future)"></i> AVAILABLE (Handle Load sensor built &amp; validated, ADR-0010)</span>
   </div>
 
   <!-- =================== RAW SIGNALS =================== -->
@@ -144,10 +144,10 @@
   </div>
 
   <!-- =================== LOADING METRICS =================== -->
-  <h2><span class="num">3</span>Loading metrics — the WSFC's headline signals (gated on the Handle Load sensor)</h2>
+  <h2><span class="num">3</span>Loading metrics — the WSFC's headline signals (Handle Load sensor built &amp; validated, ADR-0010)</h2>
 
   <div class="metric">
-    <div class="top"><span class="nm">Handle Load (relative)</span><span class="badge t3">Tier 3</span><span class="badge gated">gated</span></div>
+    <div class="top"><span class="nm">Handle Load (relative)</span><span class="badge t3">Tier 3</span><span class="badge gated">available</span></div>
     <div class="chain"><span class="box">barometer <b>pressure P</b></span><span class="ar">→</span><span class="box">− session tare</span><span class="ar">→</span><span class="box">polynomial cal</span><span class="ar">→</span><span class="box"><b>% of baseline</b></span></div>
     <div class="formula"><span class="v">load</span> = a·(P−P<sub>tare</sub>)² + b·(P−P<sub>tare</sub>) + c<span class="c"> &nbsp;(quadratic fit, Marquardt 2022 form)</span>
 <span class="v">load%</span> = 100 · load / baseline_load</div>
@@ -157,7 +157,7 @@
 
   <!-- WS target compliance (interactive) -->
   <div class="metric">
-    <div class="top"><span class="nm">Weight Support Target Compliance</span><span class="badge t3">Tier 3</span><span class="badge gated">gated</span></div>
+    <div class="top"><span class="nm">Weight Support Target Compliance</span><span class="badge t3">Tier 3</span><span class="badge gated">available</span></div>
     <div class="chain"><span class="box">per-step <b>peak load</b></span><span class="ar">→</span><span class="box">vs target band</span><span class="ar">→</span><span class="box">count in-band</span><span class="ar">→</span><span class="box"><b>in-band %</b></span></div>
     <div class="formula"><span class="v">in_band_%</span> = 100 · ( #steps with peak_load ≤ target ) / total_steps
 <span class="c">target faded −10%/week (≈60%→30% of baseline); advance week when in_band_% ≥ 80</span></div>
@@ -174,7 +174,7 @@
 
   <!-- =================== DERIVED / COMPOSITE =================== -->
   <h2><span class="num">4</span>Derived / composite metrics — the "score" layer</h2>
-  <p class="lead">Higher-order numbers built from the metrics above — a gait-quality score (live today) and a Whoop-Strain-style session dose (gated). All self-referenced to the patient's own baseline; never a population norm, never fall-risk.</p>
+  <p class="lead">Higher-order numbers built from the metrics above — a gait-quality score (live today) and a Whoop-Strain-style session dose (now available — load sensor built &amp; validated). All self-referenced to the patient's own baseline; never a population norm, never fall-risk.</p>
 
   <!-- symmetry score (interactive) -->
   <div class="metric">
@@ -197,7 +197,7 @@
 
   <!-- session strain analog (interactive) -->
   <div class="metric">
-    <div class="top"><span class="nm">Session Weight-Support Training Load</span><span class="badge t4">Tier 4 derived</span><span class="badge gated">gated · Whoop-Strain analog</span></div>
+    <div class="top"><span class="nm">Session Weight-Support Training Load</span><span class="badge t4">Tier 4 derived</span><span class="badge gated">available · Whoop-Strain analog</span></div>
     <div class="chain"><span class="box">relative load <b>intensity</b></span><span class="ar">×</span><span class="box">steps / duration</span><span class="ar">→</span><span class="box">cumulative integral</span><span class="ar">→</span><span class="box">log map <b>0–100</b></span></div>
     <div class="formula"><span class="v">raw</span> = Σ<sub>steps</sub> ( lean_reduction · in_band_factor )<span class="c"> &nbsp;// TRIMP / session-RPE structure: intensity × volume</span>
 <span class="v">score</span> = 100 · log(1 + raw) / log(1 + raw_max)<span class="c"> &nbsp;// personalized, non-linear (easy early, harder later)</span></div>
@@ -215,7 +215,7 @@
 
   <!-- cane reliance + walk ratio (interactive) -->
   <div class="metric">
-    <div class="top"><span class="nm">Cane-Reliance &amp; Walk-Ratio Trend</span><span class="badge t4">Tier 4 derived</span><span class="badge gated">gated · partly speculative</span></div>
+    <div class="top"><span class="nm">Cane-Reliance &amp; Walk-Ratio Trend</span><span class="badge t4">Tier 4 derived</span><span class="badge gated">available · partly speculative</span></div>
     <div class="chain"><span class="box">relative load over <b>weeks</b></span><span class="ar">→</span><span class="box">cane-reliance trend</span><span class="ar">&nbsp;&nbsp;</span><span class="box">stride-proxy ÷ cadence</span><span class="ar">→</span><span class="box"><b>walk ratio</b></span></div>
     <div class="formula"><span class="v">cane_reliance</span> = mean(load%) per session, trended week-over-week  <span class="c">// ↓ = weaning off the cane</span>
 <span class="v">walk_ratio</span> = step_length / cadence  <span class="c">// speed-independent coordination index, baseline-normalized</span></div>
@@ -225,12 +225,12 @@
       <div class="ctrl"><label>Cadence</label><input id="cd" type="range" min="40" max="120" value="90"><span class="val"><span id="cdV">90</span> /min</span></div>
       <div class="out"><span class="lab">walk ratio</span><span class="big" id="wrOut">—</span><span class="u">mm·min/step · <span id="wrNote"></span></span></div>
     </div>
-    <p class="note warn">Long-horizon trends, not a single-session readout. <b>Partly speculative for us:</b> a true Walk Ratio needs <i>absolute</i> step length (we have a trend only), and cane-reliance needs the unbuilt Handle Load sensor — so both are shown as personal trend lines, never absolutes.</p>
+    <p class="note warn">Long-horizon trends, not a single-session readout. <b>Partly speculative for us:</b> a true Walk Ratio needs <i>absolute</i> step length (we have a trend only), and cane-reliance now has the built &amp; validated Handle Load sensor but stays a personal trend line — so both are shown as trends, never absolutes.</p>
     <div class="cite">Walk-ratio validity: <code>Rota 2011</code>, <code>Kalron 2016</code> (both MS populations — note); cane-load weaning rationale: <code>Mercer 2009</code>, <code>Jung 2020</code>. ⚠️ <code>Nagasaki 1996</code> verified as "Walking Patterns &amp; Finger Rhythm of Older Adults" — re-check before citing for walk-ratio constancy.</div>
   </div>
 
   <footer>
-    Moon Walk — metric derivation explainer. Live calculators are illustrative (the real pipeline runs on-device, rule-based + DSP, ADR-0011). Loading &amp; Strain-analog metrics are gated on the unbuilt pneumatic Handle Load sensor (ADR-0010).<br>
+    Moon Walk — metric derivation explainer. Live calculators are illustrative (the real pipeline runs on-device, rule-based + DSP, ADR-0011). Loading &amp; Strain-analog metrics are now available — the pneumatic Handle Load sensor is built, bench-calibrated, and validated (ADR-0010).<br>
     Sources: <a href="./architecture.md">architecture.md</a> · <a href="../rehab/wsfc-processing-references.md">wsfc-processing-references.md</a> · derived-metric citations verified via Semantic Scholar. Claim-safety: every score is relative to the patient's own baseline — never %body-weight, absolute force, fall-risk, or a population norm.
   </footer>
 

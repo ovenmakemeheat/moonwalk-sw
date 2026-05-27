@@ -119,8 +119,10 @@ against a Semantic Scholar literature sweep. The convergence was unusually stron
 
 accepted (2026-05-27). Resolved through a three-lens brainstorm (clinical / ML-embedded /
 product-claim-safety) plus a Semantic Scholar literature sweep over ML on cane-IMU + load
-data. Pending: bench-residual measurement to gate #2 (depends on the pneumatic sensor build,
-[ADR-0010]); collection of per-patient setup-walk data to train #1; WSFC validation before #3.
+data. The pneumatic sensor is now built & drift/hysteresis-validated (2026-05-27, [ADR-0010]), so the
+bench residual that gates #2 can now be measured — and the validated low drift/hysteresis may
+already argue the DSP polynomial suffices, in which case #2's denoiser is not built. Still
+pending: collection of per-patient setup-walk data to train #1; WSFC validation before #3.
 
 [ADR-0004]: ./0004-two-board-uno-q-brain-nano-sensor-node.md
 [ADR-0005]: ./0005-wellness-positioning-and-claim-safety-vocabulary.md

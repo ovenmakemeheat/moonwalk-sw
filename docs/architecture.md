@@ -7,10 +7,10 @@
 > secondary applications on the same hardware. This doc describes the runtime architecture;
 > the *why* lives in the ADRs linked throughout.
 >
-> **Hardware reality (2026-05).** *In hand:* the Arduino Nano 33 BLE's onboard **LSM9DS1
-> IMU** and **LPS22HB barometer**. *Designed, not built:* the pneumatic **Handle Load**
-> bladder that the barometer reads ([ADR-0010]). *Not acquired:* the **ToF Distance** tip
-> sensor. Designed-not-built / not-acquired blocks are dashed below.
+> **Hardware reality (2026-05-27).** *In hand & working:* the Arduino Nano 33 BLE's onboard
+> **LSM9DS1 IMU** and **LPS22HB barometer**, plus the pneumatic **Handle Load** bladder —
+> now **built, bench-calibrated, and drift/hysteresis-validated** ([ADR-0010]). *Not acquired:*
+> the **ToF Distance** tip sensor. Not-acquired blocks are dashed below.
 >
 > The styled [`architecture.html`](./architecture.html) is the rendered companion to this
 > file — keep the two in sync (edit here, regenerate there).
@@ -22,7 +22,7 @@ flowchart TB
     subgraph NANO["🟢 Nano 33 BLE · Sensor Node — stick-mounted, always-on, real-time"]
         direction TB
         IMU["LSM9DS1 IMU<br/>accel + gyro · ~100–200 Hz<br/>(mag unused) · IN HAND"]
-        BARO["LPS22HB barometer + air bladder<br/>= Handle Load (P = F/A)<br/>⛔ bladder NOT BUILT (ADR-0010)"]
+        BARO["LPS22HB barometer + air bladder<br/>= Handle Load (P = F/A)<br/>✅ BUILT & VALIDATED (ADR-0010)"]
         TOF["ToF tip sensor<br/>stick-cycle phase + proximity<br/>⛔ NOT ACQUIRED"]
         ACQ["Sensor Acquisition<br/>timestamped raw IMU + pressure streams"]
         LOOP["WSFC Feedback Loop «deep»<br/>rule-based + DSP — §2 (ADR-0011)<br/>per-step load vs target band → cue"]
@@ -144,7 +144,7 @@ flowchart LR
 **Tiers** ([`docs/FEATURES.md`] §2) — 🟢 Tier 1 reliable (temporal): cycle time, cadence,
 Stick Duty Factor · 🟠 Tier 2 trend-only (spatial): stride length, velocity · 🟪 Tier 3
 relative/per-user (loading): Handle Load, Weight Support Target compliance — **WSFC's headline
-signals**, gated on the pneumatic build.
+signals**, now unblocked (pneumatic sensor built & validated, [ADR-0010]).
 
 ## 4. One Stick Cycle — what the sensors see
 

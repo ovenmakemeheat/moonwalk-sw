@@ -58,8 +58,9 @@ and `docs/pneumatic-bladder-build.html`.
   of the 7–35 kgf range may **saturate**. Mitigant: the WSFC cares about *offloading* (low/mid
   loads, "operate at the bottom of the range"), so high-load saturation is tolerable — but the
   bladder area, soft-wall offloading, and usable load span must be **bench-measured**, not
-  assumed. Nothing here is built yet: both docs are "design concept," all numbers projected, and
-  Stage A (the syringe proof-of-physics) is still to be performed.
+  assumed. **Update (2026-05-27): the bladder is now built, bench-calibrated, and
+  drift/hysteresis-validated** (see Milestone below) — so the projected numbers in this section
+  are superseded by the actual bench measurements, which must be recorded there.
 - **New failure modes to validate:** bladder puncture/leak (the docs' stated #1 failure — a
   glued joint must hold a squeeze ≥10 s), tube kinks, temperature swings outside what swing-tare
   can cancel, and calibration drift over time. The accuracy claim (~10–20% repeatable relative
@@ -125,12 +126,29 @@ Yu 2014: clinicians "unable to gauge" it), and real-time biofeedback beats scale
 (Lisitano 2025 RCT, d≈1.8) — is likewise well-supported. Full citations + DOIs:
 [`rehab/sensing-and-pwb-evidence.md`](../../rehab/sensing-and-pwb-evidence.md).
 
+## Milestone (2026-05-27): bladder built, bench-calibrated, and validated
+
+The pneumatic Handle Load sensor is no longer a design concept — it is **physically built,
+bench-calibrated against a reference scale, and drift/hysteresis-validated.** This unblocks the
+entire WSFC loading stack (CONTEXT.md, `docs/metrics.md` §3 — Handle Load + WS Target Compliance
+move from *gated* to *available*).
+
+**To record from the bench results** (these replace the projected numbers in the rationale above
+— do not leave them as projections):
+- the fitted **pressure→load polynomial** (`a, b, c`) and its R²;
+- the **measured usable load span** and whether the top of the 7–35 kgf range **saturates**
+  (the open question above) — and the bladder area actually used;
+- the **measured drift / hysteresis %** over a ~30-min session window, vs the Dabling-2012
+  projection (2.3% static / 2.8% hysteresis), confirming the session-start tare suffices;
+- the **seal / leak** result (squeeze-hold ≥10 s).
+
 ## Status
 
-accepted; amended 2026-05-27 (tare strategy is per-application: WSFC uses session-start
-tare, not per-swing auto-tare — see Amendment above). Supersedes the multi-FSR grip
-assumption carried in earlier docs/ADRs. Design is prototyped in
-`docs/pneumatic-load-sensing.html`; bench calibration + leak/drift validation are pending.
+accepted; amended 2026-05-27 (tare strategy is per-application — see Amendment above) and
+**bladder built + bench-calibrated + drift/hysteresis-validated 2026-05-27 (see Milestone
+above)**. Supersedes the multi-FSR grip assumption carried in earlier docs/ADRs. Remaining:
+record the actual bench-measured values (polynomial, load span/saturation, drift %) into the
+rationale section, replacing the superseded projections.
 
 [DOI 10.1109/TOH.2016.2636822]: https://doi.org/10.1109/TOH.2016.2636822
 [DOI 10.3390/mi13112051]: https://doi.org/10.3390/mi13112051

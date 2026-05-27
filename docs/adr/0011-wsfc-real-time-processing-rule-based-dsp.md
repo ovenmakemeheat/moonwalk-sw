@@ -96,7 +96,7 @@ accepted (2026-05-27). Records the processing-approach decision for the WSFC fla
 resolved through a grilling + literature-research session; evidence and verified citations in
 [`rehab/wsfc-processing-references.md`](../../rehab/wsfc-processing-references.md). Pending:
 empirical tuning of the deadband / min on-off times and the baseline percentile on real
-hardware (gated on the pneumatic sensor build, [ADR-0010]).
+hardware — now actionable, as the pneumatic sensor is built & validated (2026-05-27, [ADR-0010]).
 
 [ADR-0004]: ./0004-two-board-uno-q-brain-nano-sensor-node.md
 [ADR-0009]: ./0009-pivot-to-weight-support-feedback-cane.md

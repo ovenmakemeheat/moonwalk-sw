@@ -9,7 +9,8 @@
 > **Two truths to keep in mind throughout:**
 > 1. **Everything below comes from just two sensor streams** — a 6-axis IMU and one barometric
 >    pressure channel. Metrics 1–5 + derived ② need the **IMU only (live today)**; the loading
->    metrics 6–7 + derived ①③ need the **pneumatic Handle Load sensor (designed, not built)**.
+>    metrics 6–7 + derived ①③ need the **pneumatic Handle Load sensor — now built, bench-calibrated
+>    & drift/hysteresis-validated (2026-05-27, [ADR-0010])**.
 > 2. **Claim-safety binds every metric** ([ADR-0009]): relative to the patient's *own* baseline,
 >    never %-body-weight, never absolute force, never fall-risk, never a diagnosis or a population norm.
 
@@ -25,11 +26,11 @@ Everything traces back to these. Nothing else is sampled.
 |---|---|---|---|
 | IMU gyro | `gx, gy, gz` (deg/s) | LSM9DS1 (onboard Nano 33 BLE) | ✅ in hand |
 | IMU accel | `ax, ay, az` (g) | LSM9DS1 | ✅ in hand |
-| Barometer | `P` (pressure) | LPS22HB + air bladder under grip | 🔴 barometer in hand, **bladder not built** ([ADR-0010]) |
+| Barometer | `P` (pressure) | LPS22HB + air bladder under grip | ✅ in hand — **bladder built, bench-calibrated & drift/hysteresis-validated** ([ADR-0010]) |
 | Timestamp | `t` (ms) | MCU clock | ✅ |
 
 → **8 numbers per sample** (`t, gx, gy, gz, ax, ay, az, P`). The firmware already streams the 6
-IMU values (`realtime/hub.py`); `P` is added once the bladder exists.
+IMU values (`realtime/hub.py`); `P` is now streamed too — the bladder is built and validated.
 
 ### 0.2 One-time calibration / config constants
 
@@ -123,14 +124,14 @@ trend-only for us).
 ## 3. Loading metrics — Tier 3 (the WSFC's headline signals; gated on the Handle Load sensor)
 
 These are what makes Moon Walk a **Weight Support Feedback Cane** rather than a pedometer. Both are
-blocked until the pneumatic bladder is built and bench-validated.
+now unblocked — the pneumatic bladder is built, bench-calibrated, and drift/hysteresis-validated ([ADR-0010]).
 
 ### 3.1 Handle Load (relative)
 - **Sensor & derivation:** barometer reads trapped-air pressure under the grip; subtract the
   session tare, map pressure→load with the fitted polynomial, express as **% of the patient's own
   baseline cane-dependence**.
 - **Formula:** `load = a·(P−P_tare)² + b·(P−P_tare) + c` ; `load% = 100 · load / baseline_load`
-- **Tier / status:** Tier 3 · **gated**.
+- **Tier / status:** Tier 3 · **available** (sensor built & validated, [ADR-0010]).
 - **Why we need it:** this is the direct measure of how much the patient offloads onto the cane —
   the variable the whole therapy retrains. A barometer-in-elastomer is a validated, drift-stable
   force transducer (Cerveri 2017 RMSE 0.04 N; Dabling 2012 — the air-bubble sensor had the lowest
@@ -143,7 +144,7 @@ blocked until the pneumatic bladder is built and bench-validated.
   compared to the current target band; count the in-band steps.
 - **Formula:** `in_band_% = 100 · (#steps with peak_load ≤ target) / total_steps`
   Target faded −10%/week (≈60%→30% of baseline); **advance the week only when in_band_% ≥ 80**.
-- **Tier / status:** Tier 3 · **gated**.
+- **Tier / status:** Tier 3 · **available** (sensor built & validated, [ADR-0010]).
 - **Why we need it:** it is the WSFC's primary outcome and the loop's control signal — it tells the
   patient (and clinician) whether they are hitting the prescribed weaning schedule, and gates
   progression. The threshold + faded-schedule + ≥80%-advance protocol is the clinically-validated
@@ -182,7 +183,7 @@ clinician a progress summary. All self-referenced to the patient's own baseline.
 - **Formula:**
   `raw = Σ_steps ( lean_reduction · in_band_factor )`  (intensity × volume — a TRIMP / session-RPE structure)
   `score = 100 · log(1 + raw) / log(1 + raw_max)`  (easy gains early, harder later)
-- **Tier / status:** Tier 4 · **gated** (a degraded IMU-only walking-volume version could ship sooner).
+- **Tier / status:** Tier 4 · **available** (load sensor built & validated, [ADR-0010]; integration pending).
 - **Why we need it:** a single, motivating "how much quality retraining you banked today" figure —
   the engagement hook (it drives the Walk Buddies layer) and a clinician dose record. The structure
   is borrowed from validated training-load science (TRIMP — García-Ramos 2015; session-RPE — Tibana
@@ -196,12 +197,12 @@ clinician a progress summary. All self-referenced to the patient's own baseline.
 - **Formula:**
   `cane_reliance = mean(load%) per session, trended week-over-week`  (↓ = weaning off the cane)
   `walk_ratio = step_length / cadence`  (speed-independent coordination index, baseline-normalised)
-- **Tier / status:** Tier 4 · **gated, partly speculative**.
+- **Tier / status:** Tier 4 · **available, partly speculative** (load path unblocked, [ADR-0010]; walk-ratio still trend-only — needs absolute step length).
 - **Why we need it:** the long-horizon "are you needing the cane less, and is your coordination
   holding together as you speed up" story — the ultimate goal of the therapy. Walk Ratio is a
   validated speed-independent gait-control summary (Rota 2011, Kalron 2016 — both **MS** populations).
 - **Honesty / caveats:** a true Walk Ratio needs *absolute* step length (we have a trend only), and
-  cane-reliance needs the unbuilt Handle Load sensor — so both are shown as personal trend lines,
+  cane-reliance now has the built & validated Handle Load sensor, but is still shown as a personal trend line,
   never absolutes. ⚠️ Nagasaki 1996, sometimes cited for walk-ratio constancy, is actually titled
   "Walking Patterns and Finger Rhythm of Older Adults" — re-check before relying on it.
 
@@ -225,9 +226,10 @@ clinician a progress summary. All self-referenced to the patient's own baseline.
 ● = required · ●* = IMU used for step segmentation / tare gating (marks *when* a step/swing occurs so
 the barometer is read at the right instant).
 
-**Build order this implies:** IMU alone → metrics 1–5 and derived ② (today). Add one barometric
-pressure channel (and build the bladder) → Handle Load, WS Target compliance, and derived ①③ — i.e.
-the entire WSFC flagship rides on that one extra stream.
+**Build order this implies:** IMU alone → metrics 1–5 and derived ② (shipped). The barometric
+pressure channel (bladder built & validated 2026-05-27, [ADR-0010]) → Handle Load, WS Target
+compliance, and derived ①③ — i.e. the entire WSFC flagship, which rides on that one extra stream,
+is now unblocked.
 
 ---
 

@@ -159,7 +159,7 @@
     <h1>Weight Support Feedback Cane — Architecture</h1>
     <p class="sub">Moon Walk is one clip-on sensor running several applications (ADR-0009). The flagship <b>WSFC</b> runs a real-time weight-support biofeedback loop that retrains a rehab Patient to load the affected leg instead of over-leaning on the cane. Wellness gait-monitoring and the Speaking Stick are secondary apps on the same hardware.</p>
     <div class="banner">
-      <b>Hardware reality (2026-05).</b> <b>In hand:</b> the Arduino Nano 33 BLE's onboard LSM9DS1 IMU and LPS22HB barometer. <span class="des">Designed, not built:</span> the pneumatic Handle Load bladder the barometer reads (ADR-0010). <span class="na">Not acquired:</span> the ToF Distance tip sensor. So the live system is <b>IMU-only</b>; the whole WSFC loop is gated on building &amp; bench-validating the pneumatic sensor.
+      <b>Hardware reality (2026-05-27).</b> <b>In hand &amp; working:</b> the Arduino Nano 33 BLE's onboard LSM9DS1 IMU and LPS22HB barometer, plus the pneumatic Handle Load bladder — now <b>built, bench-calibrated, and drift/hysteresis-validated</b> (ADR-0010). <span class="na">Not acquired:</span> the ToF Distance tip sensor. So the whole WSFC loading loop is now unblocked; only the ToF-dependent Proximity Alert remains gated.
     </div>
   </header>
 
@@ -183,7 +183,7 @@
       <h3>Full-rate sensing + the real-time WSFC Feedback Loop + offline tactile cue</h3>
       <div class="row">
         <div class="node sensor"><div class="nm">LSM9DS1 IMU</div><div class="dl">accel + gyro · ~100–200 Hz · mag unused · IN HAND</div></div>
-        <div class="node designed"><div class="nm">LPS22HB + air bladder</div><div class="dl">Handle Load (P = F/A) · barometer in hand, bladder not built (ADR-0010)</div></div>
+        <div class="node sensor"><div class="nm">LPS22HB + air bladder</div><div class="dl">Handle Load (P = F/A) · BUILT &amp; VALIDATED (ADR-0010)</div></div>
         <div class="node future"><div class="nm">ToF (tip)</div><div class="dl">stick-cycle phase + Proximity Alert</div></div>
       </div>
       <div class="arrow">↓</div>
@@ -259,7 +259,7 @@
 
   <!-- ============ 3. METRICS ============ -->
   <h2><span class="num">3</span>Sensor → signal → metric</h2>
-  <p class="lead">Temporal metrics are the reliable headline numbers; spatial metrics are trend-only; loading metrics are relative/per-user — and are <b>WSFC's headline signals</b>, gated on the pneumatic build. Tiers per <a href="./FEATURES.md">FEATURES.md</a> §2.</p>
+  <p class="lead">Temporal metrics are the reliable headline numbers; spatial metrics are trend-only; loading metrics are relative/per-user — and are <b>WSFC's headline signals</b>, now unblocked (pneumatic sensor built &amp; validated, ADR-0010). Tiers per <a href="./FEATURES.md">FEATURES.md</a> §2.</p>
   <table>
     <thead><tr><th>Metric</th><th>Source signal</th><th>Formula / method</th><th>Tier</th><th>Used by</th></tr></thead>
     <tbody>
@@ -309,7 +309,7 @@
 
   <footer>
     Moon Walk — WSFC flagship architecture. Cane Mode shown (Walker Mode swaps the distance method for wheel-encoder odometry and needs dual-grip pneumatic pads, not acquired).<br>
-    Sources: ADR-0004 (two boards), ADR-0009 (WSFC pivot), ADR-0010 (pneumatic Handle Load + tare amendment), ADR-0011 (rule-based + DSP loop), <a href="../rehab/wsfc-processing-references.md">rehab/wsfc-processing-references.md</a>. Generated from <code>docs/architecture.md</code> — edit there and regenerate. Sample rates &amp; UART packet design are an engineering budget, not yet pinned; the pneumatic sensor is unbuilt and unvalidated.
+    Sources: ADR-0004 (two boards), ADR-0009 (WSFC pivot), ADR-0010 (pneumatic Handle Load + tare amendment), ADR-0011 (rule-based + DSP loop), <a href="../rehab/wsfc-processing-references.md">rehab/wsfc-processing-references.md</a>. Generated from <code>docs/architecture.md</code> — edit there and regenerate. Sample rates &amp; UART packet design are an engineering budget, not yet pinned; the pneumatic sensor is now built, bench-calibrated, and validated (ADR-0010).
   </footer>
 
 </div>

@@ -58,9 +58,11 @@ Cycle phase detection. The barometer *simulates an FSR/load cell* using sensors 
 on the board — see [ADR-0010] and `docs/pneumatic-load-sensing.html`. Temp/humidity
 (Thermo) was dropped as not gait-relevant.
 
-> **Hardware in hand (2026-05): IMU + barometer.** Physically acquired: the Arduino
-> Nano 33 BLE's onboard **LSM9DS1 IMU** (6-axis; magnetometer ignored) and **LPS22HB
-> barometer** (260–1260 hPa). **Handle Load is measured pneumatically** — a soft sealed
+> **Hardware in hand (2026-05-27): IMU + pneumatic Handle Load sensor.** Physically acquired
+> and working: the Arduino Nano 33 BLE's onboard **LSM9DS1 IMU** (6-axis; magnetometer ignored)
+> and **LPS22HB barometer** (260–1260 hPa), and the **pneumatic Handle Load bladder is now built,
+> bench-calibrated, and drift/hysteresis-validated** ([ADR-0010]) — no longer a design concept.
+> **Handle Load is measured pneumatically** — a soft sealed
 > bladder under the grip pipes trapped-air pressure to the barometer; the zero is
 > **tared** to cancel thermal drift/creep/leak — **once at session start** for the
 > supervised ~30-min WSFC application, or **each swing phase** (IMU: cane in air = zero
