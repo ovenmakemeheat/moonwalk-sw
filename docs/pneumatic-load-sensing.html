@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moon Walk — Measuring Weight-Bearing with Sensors We Already Have</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f1419; --bg2:#0b0f14; --panel:#161d26; --panel2:#1c2530; --panel3:#11161d;
+    --line:#2a3542; --line2:#37485a;
+    --ink:#e8eef4; --dim:#9fb0c0; --faint:#6b7d8f;
+    --accent:#5ec8d8; --accent2:#7ee0a0; --warn:#f0b95c; --bad:#f07a6e; --good:#7ee0a0;
+    --air:#8ad7e6;
+    --mono:'JetBrains Mono','SF Mono',ui-monospace,'Cascadia Code',Menlo,Consolas,monospace;
+    --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --display:'Space Grotesk',var(--sans);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:
+      radial-gradient(900px 500px at 82% -8%, rgba(94,200,216,.10), transparent 60%),
+      radial-gradient(800px 500px at -5% 12%, rgba(126,224,160,.06), transparent 55%),
+      var(--bg);
+    color:var(--ink);font-family:var(--sans);line-height:1.62;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:54px 24px 100px}
+
+  /* ---------- header ---------- */
+  header.top{margin-bottom:8px}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);
+    font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);
+    border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line));border-radius:999px;
+    padding:5px 13px;background:color-mix(in srgb,var(--accent) 8%,var(--panel))}
+  .eyebrow .moon{color:var(--accent2)}
+  h1{font-family:var(--display);font-size:2.55rem;line-height:1.08;margin:18px 0 8px;
+    letter-spacing:-.025em;font-weight:700;
+    background:linear-gradient(100deg,#fff 30%,var(--accent) 120%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .subtitle{font-size:1.2rem;color:var(--dim);margin:0 0 4px;max-width:740px;font-weight:500}
+  .tldr{margin-top:22px;display:flex;flex-wrap:wrap;gap:10px}
+  .chip{font-family:var(--mono);font-size:.74rem;color:var(--dim);
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 11px}
+  .chip b{color:var(--accent2)}
+
+  /* ---------- sections ---------- */
+  h2{font-family:var(--display);font-size:1.5rem;margin:64px 0 14px;letter-spacing:-.015em;
+    border-top:1px solid var(--line);padding-top:34px;font-weight:600;display:flex;align-items:baseline;gap:14px}
+  h2 .n{color:var(--faint);font-family:var(--mono);font-size:1.05rem;font-weight:500}
+  h3{font-family:var(--display);font-size:1.1rem;margin:26px 0 8px;color:var(--accent2);font-weight:600}
+  p{color:var(--ink);margin:10px 0}
+  .lead{font-size:1.12rem;color:var(--dim)}
+  em{color:var(--accent2);font-style:italic}
+  code{font-family:var(--mono);background:var(--panel2);padding:2px 6px;border-radius:5px;
+    font-size:.86em;color:var(--accent)}
+  .good-t{color:var(--good);font-weight:600}
+  .bad-t{color:var(--bad);font-weight:600}
+
+  /* ---------- callouts ---------- */
+  .callout{border-radius:14px;padding:22px 26px;margin:22px 0;position:relative;
+    border:1px solid var(--line);background:var(--panel)}
+  .callout .klabel{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;
+    text-transform:uppercase;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:9px}
+  .callout .klabel .dot{width:8px;height:8px;border-radius:50%}
+  .callout p{margin:8px 0;color:var(--ink)}
+  .callout.constraint{border-color:color-mix(in srgb,var(--warn) 45%,var(--line));
+    background:linear-gradient(180deg,color-mix(in srgb,var(--warn) 9%,var(--panel)),var(--panel))}
+  .callout.constraint .klabel{color:var(--warn)} .callout.constraint .dot{background:var(--warn)}
+  .callout.reframe{border-color:color-mix(in srgb,var(--accent2) 50%,var(--line));
+    background:linear-gradient(180deg,color-mix(in srgb,var(--accent2) 11%,var(--panel)),var(--panel));
+    box-shadow:0 0 0 1px color-mix(in srgb,var(--accent2) 12%,transparent),0 18px 50px -28px rgba(126,224,160,.5)}
+  .callout.reframe .klabel{color:var(--accent2)} .callout.reframe .dot{background:var(--accent2)}
+  .callout.reframe .big{font-family:var(--display);font-size:1.32rem;line-height:1.4;color:#fff;font-weight:600;margin:6px 0}
+  .callout.fallback{border-style:dashed;border-color:var(--line2);background:var(--panel3)}
+  .callout.fallback .klabel{color:var(--faint)} .callout.fallback .dot{background:var(--faint)}
+  .callout.fallback p{color:var(--dim);font-size:.92rem}
+
+  /* ---------- hero diagram panel ---------- */
+  .figure{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:14px 14px 8px;margin:22px 0;overflow:hidden}
+  .figure svg{width:100%;height:auto;display:block}
+  .figcap{font-size:.86rem;color:var(--faint);text-align:center;padding:10px 14px 14px;font-family:var(--mono)}
+  .figcap b{color:var(--dim)}
+
+  /* ---------- math box ---------- */
+  .math{font-family:var(--mono);background:var(--panel3);border:1px solid var(--line);
+    border-left:3px solid var(--accent);border-radius:10px;padding:16px 20px;margin:14px 0;
+    font-size:1.02rem;overflow-x:auto;color:var(--ink)}
+  .math .lbl{float:right;color:var(--faint);font-size:.78rem;font-family:var(--sans)}
+  .math .res{color:var(--accent2);font-weight:700}
+
+  /* ---------- comparison cards ---------- */
+  .vs{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:22px 0}
+  @media(max-width:680px){.vs{grid-template-columns:1fr}}
+  .vscard{border-radius:14px;padding:20px 22px;border:1px solid var(--line);background:var(--panel)}
+  .vscard.no{border-color:color-mix(in srgb,var(--bad) 40%,var(--line));
+    background:linear-gradient(180deg,color-mix(in srgb,var(--bad) 7%,var(--panel)),var(--panel))}
+  .vscard.yes{border-color:color-mix(in srgb,var(--good) 45%,var(--line));
+    background:linear-gradient(180deg,color-mix(in srgb,var(--good) 8%,var(--panel)),var(--panel))}
+  .vscard h4{font-family:var(--display);margin:0 0 4px;font-size:1.05rem;display:flex;align-items:center;gap:9px}
+  .vscard.no h4{color:var(--bad)} .vscard.yes h4{color:var(--good)}
+  .vscard .verdict{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+  .vscard ul{margin:12px 0 0;padding-left:18px;color:var(--dim);font-size:.92rem}
+  .vscard li{margin:7px 0}
+  .vscard li b{color:var(--ink)}
+
+  /* ---------- steps ---------- */
+  ol.steps{list-style:none;counter-reset:s;padding:0;margin:18px 0}
+  ol.steps>li{counter-increment:s;position:relative;padding:16px 18px 16px 58px;
+    margin:11px 0;background:var(--panel);border:1px solid var(--line);border-radius:11px;color:var(--dim)}
+  ol.steps>li::before{content:counter(s);position:absolute;left:15px;top:15px;
+    width:29px;height:29px;border-radius:9px;background:color-mix(in srgb,var(--accent) 20%,var(--panel2));
+    color:var(--accent);font-weight:700;display:grid;place-items:center;font-family:var(--mono);
+    border:1px solid color-mix(in srgb,var(--accent) 45%,transparent)}
+  ol.steps>li b{color:var(--ink)}
+
+  /* ---------- results card ---------- */
+  .result{display:grid;grid-template-columns:1.15fr 1fr;gap:0;margin:24px 0;border-radius:16px;overflow:hidden;
+    border:1px solid color-mix(in srgb,var(--accent2) 45%,var(--line));
+    background:linear-gradient(135deg,color-mix(in srgb,var(--accent2) 10%,var(--panel)),var(--panel))}
+  @media(max-width:680px){.result{grid-template-columns:1fr}}
+  .result .left{padding:26px 28px}
+  .result .klabel{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--accent2);font-weight:700;margin-bottom:10px}
+  .result h3{margin:0 0 8px;color:#fff;font-size:1.32rem}
+  .result p{color:var(--dim);font-size:.96rem;margin:8px 0 0}
+  .result .right{padding:26px 28px;border-left:1px solid color-mix(in srgb,var(--accent2) 30%,var(--line));
+    display:flex;flex-direction:column;justify-content:center;gap:16px;
+    background:color-mix(in srgb,var(--accent2) 6%,transparent)}
+  @media(max-width:680px){.result .right{border-left:0;border-top:1px solid color-mix(in srgb,var(--accent2) 30%,var(--line))}}
+  .stat .v{font-family:var(--display);font-size:2.1rem;font-weight:700;color:var(--accent2);line-height:1}
+  .stat .k{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-top:4px}
+
+  footer{margin-top:72px;padding-top:24px;border-top:1px solid var(--line);
+    color:var(--faint);font-size:.82rem;line-height:1.6}
+  footer b{color:var(--dim)}
+  .disc{display:inline-block;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 40%,var(--line));border-radius:999px;
+    padding:4px 11px;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ HEADER ============ -->
+  <header class="top">
+    <span class="eyebrow"><span class="moon">◗</span> Moon Walk · Sensor Engineering</span>
+    <h1>Measuring Weight-Bearing with Sensors We Already Have</h1>
+    <p class="subtitle">Turning a barometer into a load sensor.</p>
+    <div class="tldr">
+      <span class="chip">Sensors in hand: <b>LSM9DS1 IMU</b> + <b>LPS22HB barometer</b></span>
+      <span class="chip">No FSR · No load cell · <b>$0 BOM add</b></span>
+      <span class="chip">Target load: <b>~7–35 kgf</b> (70–340 N)</span>
+    </div>
+  </header>
+
+  <!-- ============ THE CONSTRAINT ============ -->
+  <div class="callout constraint">
+    <div class="klabel"><span class="dot"></span>The constraint we're boxed into</div>
+    <p>We have <b>only two sensors</b> and can't buy more: an <b>LSM9DS1 IMU</b> and an
+      <b>LPS22HB barometer</b> (range 260–1260 hPa, ~1 Pa RMS noise, ≤75 Hz) on an
+      Arduino Nano 33 BLE. <b>No FSR, no load cell.</b> Yet the goal is to measure
+      <em>weight-bearing / loading compliance</em> — how much body weight
+      (~7–35 kgf / 70–340 N) a person transfers through the cane. A barometer measures
+      air pressure. So how do we weigh a human with a weather sensor?</p>
+  </div>
+
+  <!-- ============ THE REFRAME ============ -->
+  <div class="callout reframe">
+    <div class="klabel"><span class="dot"></span>The reframe — we don't need precision, we need a repeatable trend</div>
+    <p class="big">Weight-bearing compliance does <em>not</em> need absolute precision.</p>
+    <p>Clinical targets are deliberately coarse — <code>"30–50% body weight"</code>,
+      <code>"20 kg ± 10 kg"</code>. And the standard we actually compete against — a
+      therapist's <b>tactile guess</b> — is wrong by <b>20–30%</b>. So a
+      <b>repeatable, relative load trend accurate to ~10–20%</b> already
+      <em>matches or beats</em> clinical practice. We are not building a scale; we are
+      building a compliance coach.</p>
+  </div>
+
+  <!-- ============ CORE IDEA + HERO DIAGRAM ============ -->
+  <h2><span class="n">01</span>The core idea — a pneumatic load cell</h2>
+  <p class="lead">Turn the barometer into a <b>pneumatic load cell</b> using the
+    oldest trick in pressure sensing: <code>P = F / A</code>.</p>
+  <p>A soft sealed <b>air bladder</b> (~25–35 cm² footprint — a silicone dome or a
+    heat-sealed TPU pouch) sits <b>under the handle grip</b>. Body weight on the grip
+    compresses the bladder, so the trapped air pressure rises. A thin silicone tube
+    pipes that pressure down to the <b>LPS22HB</b>, sealed in a small 3D-printed
+    manifold. The barometer reads the pressure; a calibration curve maps it to kgf.</p>
+
+  <div class="figure">
+    <!-- HERO: cane cross-section -->
+    <svg viewBox="0 0 900 470" role="img" aria-label="Cross-section of the Moon Walk cane showing hand on handle, air bladder under the grip, silicone tube down the shaft, barometer manifold, and ferrule on the ground">
+      <defs>
+        <linearGradient id="shaftG" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#2a3542"/><stop offset=".5" stop-color="#3b4a5c"/><stop offset="1" stop-color="#222b36"/>
+        </linearGradient>
+        <linearGradient id="gripG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#3a4757"/><stop offset="1" stop-color="#27313d"/>
+        </linearGradient>
+        <radialGradient id="bladderG" cx="50%" cy="38%" r="70%">
+          <stop offset="0" stop-color="#aee6f1"/><stop offset="1" stop-color="#5ec8d8"/>
+        </radialGradient>
+        <linearGradient id="manG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#243744"/><stop offset="1" stop-color="#16242c"/>
+        </linearGradient>
+        <marker id="ah" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 z" fill="#f0b95c"/>
+        </marker>
+        <marker id="ahc" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 z" fill="#5ec8d8"/>
+        </marker>
+      </defs>
+
+      <!-- ground -->
+      <line x1="40" y1="430" x2="640" y2="430" stroke="#3a4a5a" stroke-width="2.5"/>
+      <g stroke="#2a3542" stroke-width="1.5">
+        <line x1="70" y1="430" x2="56" y2="446"/><line x1="120" y1="430" x2="106" y2="446"/>
+        <line x1="170" y1="430" x2="156" y2="446"/><line x1="220" y1="430" x2="206" y2="446"/>
+        <line x1="270" y1="430" x2="256" y2="446"/><line x1="320" y1="430" x2="306" y2="446"/>
+        <line x1="370" y1="430" x2="356" y2="446"/><line x1="420" y1="430" x2="406" y2="446"/>
+        <line x1="470" y1="430" x2="456" y2="446"/><line x1="520" y1="430" x2="506" y2="446"/>
+        <line x1="570" y1="430" x2="556" y2="446"/><line x1="620" y1="430" x2="606" y2="446"/>
+      </g>
+
+      <!-- offset hand load arrow (body weight) -->
+      <g>
+        <line x1="245" y1="22" x2="245" y2="78" stroke="#f0b95c" stroke-width="3.5" marker-end="url(#ah)"/>
+        <text x="262" y="48" fill="#f0b95c" font-family="'JetBrains Mono',monospace" font-size="15" font-weight="700">F = body weight</text>
+        <text x="262" y="68" fill="#9fb0c0" font-family="'JetBrains Mono',monospace" font-size="12.5">~70–340 N  (7–35 kgf)</text>
+      </g>
+
+      <!-- hand (stylised, grasping) -->
+      <g fill="#e0c2a0" stroke="#caa782" stroke-width="1.5">
+        <ellipse cx="190" cy="108" rx="62" ry="26"/>
+        <rect x="150" y="86" width="16" height="26" rx="8"/>
+        <rect x="172" y="80" width="16" height="30" rx="8"/>
+        <rect x="194" y="80" width="16" height="30" rx="8"/>
+        <rect x="216" y="84" width="16" height="28" rx="8"/>
+      </g>
+      <text x="190" y="78" fill="#9fb0c0" font-family="'Inter',sans-serif" font-size="13" text-anchor="middle">hand on handle</text>
+
+      <!-- handle bar (horizontal grip) -->
+      <rect x="120" y="118" width="200" height="30" rx="15" fill="url(#gripG)" stroke="#46566a" stroke-width="1.5"/>
+      <!-- handle-to-shaft neck -->
+      <path d="M300 132 q42 0 50 44" fill="none" stroke="url(#gripG)" stroke-width="26" stroke-linecap="round"/>
+
+      <!-- BLADDER under the grip -->
+      <path d="M118 150 q102 46 204 0 q6 26 -10 38 q-92 40 -184 0 q-16 -12 -10 -38 z"
+            fill="url(#bladderG)" stroke="#3aa7ba" stroke-width="2" opacity=".95"/>
+      <!-- air molecules hint -->
+      <g fill="#0b2a30" opacity=".5">
+        <circle cx="160" cy="178" r="3"/><circle cx="195" cy="186" r="3"/>
+        <circle cx="230" cy="176" r="3"/><circle cx="270" cy="184" r="3"/><circle cx="135" cy="184" r="3"/>
+      </g>
+      <text x="220" y="232" fill="#5ec8d8" font-family="'JetBrains Mono',monospace" font-size="14" font-weight="700" text-anchor="start">soft sealed air bladder</text>
+      <text x="220" y="250" fill="#9fb0c0" font-family="'JetBrains Mono',monospace" font-size="12" text-anchor="start">~25–35 cm² · silicone dome / TPU pouch</text>
+
+      <!-- shaft -->
+      <rect x="338" y="176" width="22" height="254" rx="6" fill="url(#shaftG)" stroke="#46566a" stroke-width="1.2"/>
+      <text x="375" y="300" fill="#6b7d8f" font-family="'Inter',sans-serif" font-size="12" transform="rotate(90 375 300)">cane shaft</text>
+
+      <!-- silicone tube (pressure path) running down -->
+      <path d="M250 186 q-30 8 -28 40 q2 30 60 44 q66 16 60 60 q-4 36 -14 64"
+            fill="none" stroke="#5ec8d8" stroke-width="6" stroke-linecap="round" opacity=".9"/>
+      <!-- pressure flow arrow along tube -->
+      <line x1="324" y1="330" x2="328" y2="378" stroke="#5ec8d8" stroke-width="3" marker-end="url(#ahc)" opacity=".95"/>
+      <text x="120" y="320" fill="#5ec8d8" font-family="'JetBrains Mono',monospace" font-size="12.5">thin silicone tube</text>
+      <text x="120" y="338" fill="#9fb0c0" font-family="'JetBrains Mono',monospace" font-size="11.5">pipes pressure → manifold</text>
+
+      <!-- manifold w/ barometer + Nano -->
+      <rect x="270" y="378" width="118" height="48" rx="8" fill="url(#manG)" stroke="#5ec8d8" stroke-width="1.6"/>
+      <rect x="282" y="390" width="26" height="24" rx="4" fill="#0f1419" stroke="#7ee0a0" stroke-width="1.4"/>
+      <text x="295" y="406" fill="#7ee0a0" font-family="'JetBrains Mono',monospace" font-size="10" text-anchor="middle" font-weight="700">LPS</text>
+      <rect x="316" y="390" width="60" height="24" rx="4" fill="#0f1419" stroke="#9fb0c0" stroke-width="1.2"/>
+      <text x="346" y="406" fill="#cfe0ee" font-family="'JetBrains Mono',monospace" font-size="10" text-anchor="middle">Nano 33</text>
+      <text x="329" y="446" fill="#9fb0c0" font-family="'Inter',sans-serif" font-size="12" text-anchor="middle">3D-printed sealed manifold (barometer + MCU)</text>
+
+      <!-- ferrule / tip -->
+      <path d="M338 426 l22 0 l8 14 q-19 8 -38 0 z" fill="#46566a" stroke="#5b6b7d" stroke-width="1.2"/>
+      <ellipse cx="349" cy="430" rx="22" ry="5" fill="#2a3542"/>
+      <text x="420" y="424" fill="#6b7d8f" font-family="'Inter',sans-serif" font-size="12">19 mm ferrule on ground</text>
+
+      <!-- legend / pressure callout panel -->
+      <g transform="translate(660,150)">
+        <rect x="0" y="0" width="210" height="170" rx="12" fill="#11161d" stroke="#2a3542" stroke-width="1.2"/>
+        <text x="16" y="30" fill="#7ee0a0" font-family="'Space Grotesk',sans-serif" font-size="15" font-weight="700">Pressure path</text>
+        <g font-family="'JetBrains Mono',monospace" font-size="12" fill="#9fb0c0">
+          <circle cx="22" cy="56" r="6" fill="#f0b95c"/><text x="38" y="60">weight presses grip</text>
+          <circle cx="22" cy="84" r="6" fill="#5ec8d8"/><text x="38" y="88">bladder air compresses</text>
+          <circle cx="22" cy="112" r="6" fill="#5ec8d8"/><text x="38" y="116">P rises in the tube</text>
+          <circle cx="22" cy="140" r="6" fill="#7ee0a0"/><text x="38" y="144">LPS22HB reads → kgf</text>
+        </g>
+      </g>
+    </svg>
+    <div class="figcap"><b>Hero cross-section.</b> Body weight (orange) compresses the bladder under the grip; the trapped-air pressure (cyan) travels down a silicone tube to the sealed barometer manifold near the tip.</div>
+  </div>
+
+  <!-- ============ WHY UNDER THE HANDLE ============ -->
+  <h2><span class="n">02</span>Why under the handle, not at the tip</h2>
+  <p class="lead">The obvious instinct — put a piston in the ferrule — runs straight
+    into the barometer's range. The geometry forces the bladder up to the handle.</p>
+
+  <p>The LPS22HB has a usable working window of about <b>25 kPa above ambient</b>
+    before it saturates. To squeeze the full 35 kgf into that window, the contact area
+    has to be large:</p>
+
+  <div class="math">
+    A = F / P = 340 N / 25 000 Pa ≈ <span class="res">136 cm²</span>
+    &nbsp;(a ~13 cm piston) <span class="lbl">P = F / A, solved for area</span>
+  </div>
+
+  <p>A 13 cm piston is <b>impossible</b> inside a 19 mm ferrule. Forcing those 340 N
+    through the ~2.8 cm² of a tip piston instead would demand pressures on the order of
+    <b>~MPa</b> — that bursts the chamber and instantly saturates the sensor. The fix is
+    counter-intuitive: a <b>large soft bladder under the handle</b>, operated near the
+    <b>bottom</b> of the pressure range, with per-step <b>auto-tare</b>. The big footprint
+    keeps the pressure in-window; the soft wall avoids the rigid-piston pressure spike.</p>
+
+  <div class="vs">
+    <div class="vscard no">
+      <div class="verdict">Approach A · rejected</div>
+      <h4>✕ Rigid piston in the ferrule</h4>
+      <ul>
+        <li>Only ~2.8 cm² of area at a 19 mm tip → needs <b>~MPa</b> pressure for 35 kgf.</li>
+        <li><b>Bursts the chamber</b> and <b>saturates instantly</b> — the LPS22HB tops out at ~1260 hPa.</li>
+        <li>A rigid piston also transmits shock spikes, not a smooth load signal.</li>
+      </ul>
+    </div>
+    <div class="vscard yes">
+      <div class="verdict">Approach B · shipping</div>
+      <h4>✓ Soft bladder under the handle</h4>
+      <ul>
+        <li>Large <b>~25–35 cm²</b> footprint keeps pressure inside the 25 kPa window.</li>
+        <li><b>Operate at the bottom of the range</b> + per-step auto-tare → buildable headroom.</li>
+        <li>Soft silicone/TPU wall spreads load smoothly — no burst, no spike.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ IMU AUTO-TARE ============ -->
+  <h2><span class="n">03</span>The IMU's secret weapon — auto-tare every step</h2>
+  <p class="lead">A sealed gas chamber <b>drifts</b> — and the drift is as big as the
+    signal. The IMU cancels it for free.</p>
+  <p>Hand heat warms the trapped air, the elastomer <b>creeps</b> under sustained load,
+    and there are inevitable <b>micro-leaks</b>. Left alone, the baseline wanders by an
+    amount comparable to the weight-bearing reading itself. The fix: the IMU already
+    detects the gait <b>swing phase</b> — the cane is in the air, so the load is
+    <b>exactly zero</b>. Re-zero (tare) the barometer baseline at that instant, every
+    single gait cycle. One free move cancels thermal drift, creep, and leak together.</p>
+
+  <div class="figure">
+    <!-- Gait-cycle auto-tare timeline -->
+    <svg viewBox="0 0 900 300" role="img" aria-label="Gait-cycle timeline showing swing (load zero, tare here), plant, stance/loading where force is measured, then lift and repeat">
+      <defs>
+        <linearGradient id="loadFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#5ec8d8" stop-opacity=".55"/><stop offset="1" stop-color="#5ec8d8" stop-opacity="0"/>
+        </linearGradient>
+        <marker id="tah" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 z" fill="#7ee0a0"/>
+        </marker>
+      </defs>
+
+      <!-- axes -->
+      <line x1="60" y1="40" x2="60" y2="220" stroke="#37485a" stroke-width="1.5"/>
+      <line x1="60" y1="220" x2="860" y2="220" stroke="#37485a" stroke-width="1.5"/>
+      <text x="30" y="60" fill="#9fb0c0" font-family="'JetBrains Mono',monospace" font-size="12" transform="rotate(-90 30 130)">load through cane</text>
+      <text x="62" y="238" fill="#6b7d8f" font-family="'JetBrains Mono',monospace" font-size="11">time →</text>
+      <line x1="60" y1="220" x2="860" y2="220" stroke="#2a3542" stroke-dasharray="3 4"/>
+      <text x="48" y="224" fill="#6b7d8f" font-family="'JetBrains Mono',monospace" font-size="11" text-anchor="end">0</text>
+
+      <!-- load curve: two gait cycles -->
+      <path d="M60,220 L150,220
+               C175,220 185,70 220,70 C255,70 265,210 300,212 L320,220
+               L410,220
+               C435,220 445,70 480,70 C515,70 525,210 560,212 L580,220
+               L860,220 Z" fill="url(#loadFill)"/>
+      <path d="M60,220 L150,220
+               C175,220 185,70 220,70 C255,70 265,210 300,212 L320,220
+               L410,220
+               C435,220 445,70 480,70 C515,70 525,210 560,212 L580,220
+               L860,220"
+            fill="none" stroke="#5ec8d8" stroke-width="2.6"/>
+
+      <!-- phase bands -->
+      <g font-family="'JetBrains Mono',monospace" font-size="11.5" text-anchor="middle">
+        <!-- swing 1 -->
+        <rect x="60" y="248" width="90" height="26" rx="6" fill="#11161d" stroke="#7ee0a0" stroke-width="1.4"/>
+        <text x="105" y="265" fill="#7ee0a0" font-weight="700">SWING</text>
+        <!-- plant 1 -->
+        <rect x="152" y="248" width="60" height="26" rx="6" fill="#11161d" stroke="#37485a"/>
+        <text x="182" y="265" fill="#9fb0c0">PLANT</text>
+        <!-- stance 1 -->
+        <rect x="214" y="248" width="96" height="26" rx="6" fill="#11161d" stroke="#f0b95c" stroke-width="1.3"/>
+        <text x="262" y="265" fill="#f0b95c">STANCE</text>
+        <!-- lift 1 -->
+        <rect x="312" y="248" width="56" height="26" rx="6" fill="#11161d" stroke="#37485a"/>
+        <text x="340" y="265" fill="#9fb0c0">LIFT</text>
+        <!-- swing 2 -->
+        <rect x="370" y="248" width="40" height="26" rx="6" fill="#11161d" stroke="#7ee0a0" stroke-width="1.4"/>
+        <text x="390" y="265" fill="#7ee0a0" font-weight="700">SW</text>
+        <!-- repeat marker -->
+        <rect x="580" y="248" width="120" height="26" rx="6" fill="#11161d" stroke="#2a3542"/>
+        <text x="640" y="265" fill="#6b7d8f">repeat …</text>
+      </g>
+
+      <!-- TARE markers at swing (load = 0) -->
+      <g>
+        <line x1="105" y1="220" x2="105" y2="120" stroke="#7ee0a0" stroke-width="1.4" stroke-dasharray="4 4"/>
+        <circle cx="105" cy="220" r="6" fill="#7ee0a0"/>
+        <rect x="62" y="96" width="118" height="24" rx="6" fill="#0e2218" stroke="#7ee0a0" stroke-width="1.2"/>
+        <text x="121" y="112" fill="#7ee0a0" font-family="'JetBrains Mono',monospace" font-size="11.5" text-anchor="middle" font-weight="700">TARE here ✓</text>
+
+        <line x1="390" y1="220" x2="390" y2="150" stroke="#7ee0a0" stroke-width="1.4" stroke-dasharray="4 4"/>
+        <circle cx="390" cy="220" r="6" fill="#7ee0a0"/>
+        <rect x="332" y="126" width="118" height="24" rx="6" fill="#0e2218" stroke="#7ee0a0" stroke-width="1.2"/>
+        <text x="391" y="142" fill="#7ee0a0" font-family="'JetBrains Mono',monospace" font-size="11.5" text-anchor="middle" font-weight="700">TARE here ✓</text>
+      </g>
+
+      <!-- MEASURE marker at stance peak -->
+      <g>
+        <line x1="262" y1="70" x2="262" y2="40" stroke="#f0b95c" stroke-width="1.4" marker-end="url(#tah)"/>
+        <rect x="206" y="14" width="112" height="24" rx="6" fill="#241c12" stroke="#f0b95c" stroke-width="1.2"/>
+        <text x="262" y="30" fill="#f0b95c" font-family="'JetBrains Mono',monospace" font-size="11.5" text-anchor="middle" font-weight="700">measure force</text>
+      </g>
+
+      <text x="640" y="130" fill="#9fb0c0" font-family="'Inter',sans-serif" font-size="13" text-anchor="middle">Every cycle: re-zero at swing (load = 0),</text>
+      <text x="640" y="150" fill="#9fb0c0" font-family="'Inter',sans-serif" font-size="13" text-anchor="middle">then read the loaded peak during stance.</text>
+    </svg>
+    <div class="figcap"><b>Gait-cycle auto-tare.</b> The barometer baseline is re-zeroed during every swing phase (green), so thermal drift, creep, and leaks never accumulate into the stance-phase reading (amber).</div>
+  </div>
+
+  <!-- ============ CALIBRATION ============ -->
+  <h2><span class="n">04</span>Calibration — a bathroom scale and a curve fit</h2>
+  <p>Mapping barometer counts to kgf is a one-time bench step, the same method
+    instrumented-crutch researchers use against force plates:</p>
+  <ol class="steps">
+    <li><b>Stand the cane on a bathroom scale.</b> The scale gives ground-truth kgf.</li>
+    <li><b>Press to a set of known loads.</b> Walk it up the range — 5, 10, 20, 30 kgf.</li>
+    <li><b>Log barometer counts vs scale reading</b> at each known load.</li>
+    <li><b>Fit the curve</b> (linear or mild polynomial) → counts become kgf on-device.</li>
+  </ol>
+
+  <!-- ============ RESULT ============ -->
+  <h2><span class="n">05</span>Expected result</h2>
+  <div class="result">
+    <div class="left">
+      <div class="klabel">Spec — what this buys us</div>
+      <h3>A repeatable, monotonic load readout</h3>
+      <p>Accurate to <b>~10–20%</b> across the <b>~7–35 kgf</b> range — clinical-grade
+        for <em>compliance coaching</em>, and comfortably better than the
+        <b>20–30%</b> error of the therapist's tactile baseline we replace. Built from
+        two sensors we already own, at zero added bill-of-materials.</p>
+    </div>
+    <div class="right">
+      <div class="stat"><div class="v">~10–20%</div><div class="k">load accuracy</div></div>
+      <div class="stat"><div class="v">7–35 kgf</div><div class="k">working range</div></div>
+      <div class="stat"><div class="v">beats 20–30%</div><div class="k">vs therapist guess</div></div>
+    </div>
+  </div>
+
+  <!-- ============ FALLBACK ============ -->
+  <div class="callout fallback">
+    <div class="klabel"><span class="dot"></span>Fallback if the bladder can't seal in time</div>
+    <p>Drop to an <b>IMU-only "relative loading index"</b> derived from the impact-peak
+      acceleration at each cane plant. This still gives a relative loading <em>trend</em>
+      plus event timing — but note the accelerometer is <b>blind to slow static lean</b>
+      (someone resting their weight without an impact), which the pneumatic bladder
+      captures directly. The bladder is the win; this is the safety net.</p>
+  </div>
+
+  <!-- ============ FOOTER ============ -->
+  <footer>
+    <span class="disc">Design concept · not a medical device</span><br>
+    <b>Moon Walk</b> — pneumatic load-sensing approach for weight-bearing compliance.
+    This document describes an engineering concept for a <b>consumer-wellness</b> device
+    intended to surface relative loading <i>trends</i>, not to provide diagnostic or
+    clinical-grade force measurements. It is <b>not a medical device</b> and must not be
+    relied upon for medical decisions.
+  </footer>
+
+</div>
+</body>
+</html>

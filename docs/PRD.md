@@ -1,37 +1,56 @@
 # PRD: Moon Walk
 
-> *WHOOP for your walking aid.*
+> *Turn any cane into a Weight Support Feedback Cane.*
 
 > Glossary: see [`CONTEXT.md`](../CONTEXT.md). Decisions: see [`docs/adr/`](./adr).
-> Capitalised terms (Host Aid, Stick Cycle, Handle Load, Baseline, Drift, Alert, …)
-> are defined there and used precisely throughout.
+> Capitalised terms (Host Aid, Stick Cycle, Handle Load, WSFC, Weight Support Target,
+> Baseline, Drift, Alert, …) are defined there and used precisely throughout.
+
+> **Moon Walk is one clip-on sensor that runs several applications**; this PRD leads
+> with the **flagship**, the **Weight Support Feedback Cane (WSFC)** (ADR-0009), then
+> the secondary wellness-monitoring and Speaking-Stick applications. Claim-safety is
+> **per-application** (see Scope).
 
 ## Problem Statement
 
-A user with a mobility-affecting condition (e.g. a developing limp) uses an
-ordinary walking stick or wheeled walker. They have no objective, continuous picture
-of how their own gait is changing day to day; subtle deterioration (or improvement
-from rehab) goes unnoticed until it is severe, and recall between any clinic visits is
-unreliable. The user has no easy way to build **awareness** of when their walking has
-changed enough that it might be worth mentioning to a doctor.
+**Primary (WSFC).** After a stroke or lower-limb injury, a rehab Patient is meant to
+gradually reload the affected leg — but they instinctively **over-rely on the cane and
+under-load the weak leg**, which entrenches asymmetric gait and slows recovery. A
+therapist can only give vague verbal cues ("lean less on the cane") because cane load
+can't be quantified at the bedside; patients and therapists both **estimate weight-bearing
+poorly** (off by ~35% of body weight — Dabke 2004). There is no everyday tool that tells
+the Patient, in real time, when they are leaning too hard.
+
+**Secondary (wellness).** Separately, a person with a mobility-affecting condition has no
+objective, continuous picture of how their own gait is changing day to day; subtle
+deterioration (or rehab improvement) goes unnoticed until severe, and recall between clinic
+visits is unreliable. They have no easy way to build **awareness** of when their walking has
+changed enough to mention to a doctor.
 
 ## Solution
 
-**Moon Walk** is a sensor box that clips onto the user's existing **Host Aid** and
-turns it into an instrument. It continuously measures the user's **Gait** —
-cadence, duty factor, loading, asymmetry, and stride/velocity trends — learns that
-individual user's normal **Baseline** on-device, and detects sustained **Drift**
-from it. When gait drifts meaningfully, the companion app raises a non-medical
-**Alert** — a wellness awareness cue (e.g. "your walking has changed — you may want to
-mention it to your doctor"), shown inline with the MEDICAL CLAIM SAFETY disclaimer.
-The user may *optionally* export a trend report to share with a doctor. Data and
-intelligence stay on the device and the user's phone; nothing goes to the cloud by
-default.
+**Moon Walk** is a sensor box that clips onto the user's existing **Host Aid** and turns
+it into an instrument — the *sensor*, on which several **applications** run.
 
-Moon Walk is a **consumer-wellness self-monitoring** tool first (see ADR-0005). It
-**measures and trends** for the user's own awareness; it does **not** diagnose, treat,
-predict disease, or predict fall risk (see ADR-0001). Sharing with a doctor is
-optional, and a clinician — never the device — interprets any data.
+**Flagship — the Weight Support Feedback Cane (WSFC)** (ADR-0009). On a cane, Moon Walk
+reads **Handle Load** every step (sensed pneumatically — a bladder under the grip read by
+the onboard barometer, ADR-0010) and compares it to the Patient's **Weight Support Target**:
+a per-patient cane-load ceiling, set by a **Clinician** from a baseline walk and **faded
+−10%/week (≈60%→30% of the patient's own baseline cane-dependence)**, advancing only when
+≥80% of steps land in-band. When the Patient over-leans, Moon Walk gives an **immediate
+auditory (default) or haptic cue** — training them to load the affected leg. The target is
+**% of the patient's own baseline**, never %body-weight and never an absolute-force claim
+(kgf is bench-calibration only). This is the evidence-backed loop from the cane biofeedback
+RCTs (Jung 2015, Kang 2021; see [`rehab/`](../rehab)).
+
+**Secondary — wellness gait monitoring** (ADR-0005). The same sensor also **measures and
+trends** the user's **Gait** — cadence, duty factor, loading, asymmetry, stride/velocity
+trends — learns the individual **Baseline** on-device, detects sustained **Drift**, and
+raises a non-medical **Alert** ("your walking has changed — you may want to mention it to
+your doctor") with the MEDICAL CLAIM SAFETY disclaimer. It does **not** diagnose, treat,
+predict disease, or predict fall risk (ADR-0001); a clinician — never the device —
+interprets any data. Data and intelligence stay on the device and phone; nothing goes to
+the cloud by default.
 
 **Moon Walk is also a Speaking Stick** (ADR-0003). On a **Look Gesture** (raise/point
 the stick) or button press, it captures the user's surroundings with a camera,
@@ -42,14 +61,15 @@ Alert** (ToF distance → buzzer/haptic) gives an instant obstacle warning. This
 see-and-speak assistive layer; it complements, and is built on the same hardware as,
 the gait-monitoring layer.
 
-**Moon Walk also motivates** (ADR-0008). The companion app presents the User's own
-movement as **Walk Buddies** — a gentle, claim-safe motivation view where a Pokémon-style
-Buddy's mood, posture, and energy follow how the User walks. A **MOVE** bar fills as they
-walk and **Levels Up** the Buddy; showing up grows **Walk-Days**, thank-you **Pins**, and a
-never-wilting berry **Garden**. It is an engagement layer over the *same* gait metrics — not
-a new sensor and not a health score: rewards for showing up need no comparison, any
-quality-based encouragement is judged against the User's *own* Baseline (never a norm), and
-the MOVE bar is the Buddy's energy, never the User's vitality.
+**Engagement / adherence — Walk Buddies** (ADR-0008). The companion app presents movement
+as **Walk Buddies** — a gentle, claim-safe view where a Pokémon-style Buddy's mood, posture,
+and energy follow how the person walks. It is an engagement layer over the *same* metrics —
+not a new sensor and not a health score. **Under the WSFC it doubles as the adherence skin:**
+the **MOVE** bar reflects live *in-band loading* (lean correctly → the Buddy perks up), and
+show-up rewards (**Walk-Days**, **Pins**, never-wilting **Garden**) track *session adherence*
+to the prescribed dose. Rewards for showing up need no comparison; any quality-based
+encouragement is judged against the person's *own* Baseline (never a norm); and the MOVE bar
+is the Buddy's energy, never the person's vitality.
 
 **Hardware: two boards** (ADR-0004). A stick-mounted **Sensor Node** (Arduino Nano)
 owns the always-on real-time sensors and tactile feedback; a **Compute Brain**
@@ -74,7 +94,14 @@ intelligence. They are linked by a wired UART.
 11. As a user, I want to *optionally* export a trend report to share with my doctor, so that they can see objective data if I choose to involve them.
 12. As a user, I want my data to stay on my device and phone by default, so that my health information is private.
 
-### Clinician (optional — only if the User chooses to share)
+### WSFC — flagship (Patient + prescribing Clinician · ADR-0009)
+- **US-W1.** As a Patient, I want an immediate cue (beep/haptic) the moment I lean too hard on the cane, so that I learn to load my affected leg instead of the cane.
+- **US-W2.** As a Clinician, I want to set the Patient's Weight Support Target from a baseline walk and have it fade automatically (−10%/week, ≈60%→30% of their own baseline cane-dependence), advancing only when ≥80% of steps are in-band, so that the retraining progresses safely without me re-tuning it each visit.
+- **US-W3.** As a Clinician, I want to prescribe a session dose (~30 min × 3–5/week × 4–6 weeks) and see in-band-step % per session, so that I can track whether the Patient is doing the work correctly.
+- **US-W4.** As a Clinician, I want recovery progress (paretic loading ↑, gait-speed trend, adherence) in one view, so that I judge clinical improvement objectively rather than by eye.
+- **US-W5.** As a Patient, I want the target framed as "% of your own baseline," never %body-weight or a force reading, so that the device stays an honest coach and never a medical scale.
+
+### Clinician — wellness (optional — only if the User chooses to share)
 13. As a clinician, I want to receive a user-shared trend report of gait metrics over time, so that I can assess progression or improvement objectively.
 14. As a clinician, I want temporal metrics (cadence, duty factor, asymmetry) presented as the primary, reliable figures, so that I trust the numbers I act on.
 15. As a clinician, I want spatial metrics (stride length, velocity) clearly labelled as relative trends, not absolutes, so that I am not misled by known underestimation.
@@ -138,9 +165,9 @@ intelligence. They are linked by a wired UART.
 
 ### Modules
 1. **Sensor Acquisition (Nano Sensor Node)** — reads the IMU (Modulino Movement /
-   LSM6DSOX), the multi-FSR grip, the ToF distance (Modulino Distance) and, in Walker
-   Mode, the wheel encoder. Emits one timestamped raw sample stream. Encapsulates all
-   I²C/Qwiic/ADC detail behind a sample-stream interface.
+   LSM6DSOX), the pneumatic **Handle Load** (bladder → LPS22HB barometer, ADR-0010), the
+   ToF distance (Modulino Distance) and, in Walker Mode, the wheel encoder. Emits one
+   timestamped raw sample stream. Encapsulates all I²C/Qwiic detail behind a sample-stream interface.
 2. **Stick Cycle Detector** *(deep)* — input: raw sample stream; output: plant/swing
    events and cycle boundaries. Pure function of the sample stream.
 3. **Gait Metric Engine** *(deep)* — input: cycle events + IMU angles + calibration;
@@ -160,8 +187,9 @@ intelligence. They are linked by a wired UART.
    framing + inline MEDICAL CLAIM SAFETY disclaimer, ADR-0005), persistent dashboard
    disclaimer footer, optional trend report export. Implements the BLE GATT layer
    itself (not provided by UNO Q docs — to be built with BlueZ/`bleak` on the Linux side).
-9. **Calibration & Mode Setup** — stick-length entry, per-user FSR threshold
-   calibration, Host Aid mode selection (manual at setup).
+9. **Calibration & Mode Setup** — stick-length entry, per-user Handle Load calibration
+   (bench-calibrate the bladder+barometer against a scale; capture the Patient's baseline
+   cane-dependence for the WSFC target), Host Aid mode selection (manual at setup).
 10. **Look Gesture + Proximity Detector (Nano)** *(deep)* — input: IMU + ToF sample
     stream; output: a debounced **Look Gesture** trigger and a thresholded **Proximity
     Alert** (with hysteresis). Pure function of the sample stream; the Proximity Alert
@@ -175,14 +203,30 @@ intelligence. They are linked by a wired UART.
     runs the show-up reward loop (**MOVE** energy → **Level**, **Walk-Days**, **Pins**,
     **Garden**) and the **Friends Album**. Reads metrics only — adds no sensing and changes
     no claim-safety surface. Built and validated as a local web app (ADR-0007) with a
-    simulated feed; the current build is full-colour Pokémon-Emerald art.
+    simulated feed; the current build is full-colour Pokémon-Emerald art. **Under the WSFC it
+    is the adherence skin** — the MOVE bar tracks live in-band loading and rewards track
+    session adherence.
+13. **WSFC Feedback Loop (Nano)** *(deep, flagship · ADR-0009)* — input: per-step Handle Load
+    + the current **Weight Support Target** band; output: a real-time **auditory (default) /
+    haptic** cue while load is out-of-band, and a per-step in-band/out-of-band classification.
+    Runs on the always-on Nano so feedback is immediate and works offline. Pure function of
+    the load stream + target.
+14. **Threshold Engine** *(deep, Linux)* — input: the Patient's baseline cane-dependence +
+    week number + in-band history; output: the current **Weight Support Target** (faded
+    −10%/week from ≈60%→30% of baseline), the advancement decision (advance only at ≥80%
+    in-band steps), and per-session in-band-% logging. Pure logic over the session series;
+    the Clinician sets the starting band and dose.
 
 ### Key technical decisions
-- **Wellness positioning + enforced claim-safety vocabulary** (ADR-0005). The person
-  is a **User**, not a "Patient"; copy uses awareness/guidance language (cue, reminder,
-  self-monitoring) and never says diagnosis, treatment, or **fall risk**. The MEDICAL
-  CLAIM SAFETY disclaimer is inline on every Alert + a persistent dashboard footer,
-  and is distinct from the Speaking Stick's assistive-safety disclosure.
+- **Per-application claim-safety** (ADR-0009, amending ADR-0005). One sensor, several
+  applications; the claim posture depends on which is running. The **WSFC** (flagship)
+  addresses a **Patient** under a prescribing **Clinician**, gives real-time therapeutic
+  feedback, and may state a weight-bearing-retraining intent. The **wellness** application
+  keeps the **User** framing: awareness/guidance language (cue, reminder, self-monitoring),
+  with the MEDICAL CLAIM SAFETY disclaimer inline on every Alert + a persistent footer. A
+  **shared boundary binds all applications**: no diagnosis, no disease/fall-risk prediction,
+  no absolute force, no %-body-weight (the WSFC target is % of the patient's *own* baseline —
+  ADR-0010). The Speaking Stick keeps its distinct assistive-safety disclosure.
 - **Scope: measure-and-trend, not diagnostic** (ADR-0001). Spatial metrics (stride,
   velocity) are relative trends only — reliable for tracking change over time, not as
   clinical absolutes; temporal metrics (cadence, rhythm) are the headline figures.
@@ -190,10 +234,13 @@ intelligence. They are linked by a wired UART.
 - **Two mode-specific sensing models, not one toggle** (ADR-0002).
 - **Handle Load does double duty** in Cane Mode: it is both the Weight-Bearing metric
   and the ZUPT stance anchor that bounds Distance Estimator drift.
-- **Two multi-channel sensors:** the IMU (6-axis) and the multi-FSR grip. Thermo
-  (temp/humidity) was dropped as not gait-relevant.
+- **Handle Load is sensed pneumatically** (ADR-0010): an air bladder under the grip read
+  by the onboard **LPS22HB barometer**, IMU swing-phase auto-tared. This replaces the
+  multi-FSR grip and uses sensors already on the board ($0 BOM). Thermo (temp/humidity) was
+  dropped as not gait-relevant.
 - **Mode selection is manual at setup** (reliable); auto-detection is out of scope.
-- **Per-user calibration is mandatory** (FSR inter-subject variability).
+- **Per-user calibration is mandatory** — bench-calibrate the bladder+barometer to the
+  patient and capture their baseline cane-dependence for the WSFC target.
 - **See-and-speak is a cloud VLM, not on-device** (ADR-0003): open-ended Scene
   Description quality is the demo "wow" and only a cloud VLM (Gemini 2.5 Flash)
   delivers it. On-device object detection + offline TTS are the no-network fallback.
@@ -230,6 +277,11 @@ fixtures, shared between the validation protocol and the test suite.
 - **Baseline & Drift Model** — given synthetic progression series, assert the Baseline
   is learned, that a single anomalous session does **not** alert, and that *sustained*
   Drift does raise an Alert (the core intelligence claim).
+- **WSFC Feedback Loop** — given a recorded load stream + a target band, assert the cue
+  fires exactly while load is out-of-band (and stays silent in-band), and that per-step
+  in/out classification matches known-answer fixtures (the flagship intelligence claim).
+- **Threshold Engine** — given synthetic session series, assert the target fades −10%/week,
+  advances only at ≥80% in-band, and never advances on a sub-threshold week.
 - **Look Gesture + Proximity Detector** — given recorded/synthetic IMU+ToF streams,
   assert the Look Gesture fires on a raise/point and not on ordinary walking
   (debounce), and that the Proximity Alert triggers at the threshold with hysteresis.
@@ -240,8 +292,12 @@ fixtures, shared between the validation protocol and the test suite.
 pure-logic modules + fixture-driven known-answer tests.
 
 ## Out of Scope
-- Diagnosis, treatment, disease prediction, **fall-risk prediction**, or any medical
-  advice (ADR-0001, ADR-0005). Moon Walk is wellness, not medicine.
+- Diagnosis, disease prediction, **fall-risk prediction**, or any diagnostic/medical
+  advice — in **every** application including the WSFC (ADR-0001, ADR-0005, ADR-0009).
+  The WSFC *does* deliver therapeutic weight-bearing feedback prescribed by a Clinician,
+  but it neither diagnoses nor predicts; it retrains a prescribed behaviour.
+- Absolute-force / %-body-weight claims (ADR-0010) — kgf is internal calibration only; the
+  WSFC target is % of the patient's own baseline cane-dependence.
 - Stress / emotional-state inference — Moon Walk senses gait and handle load only;
   "stress detection" is not a Moon Walk capability (ADR-0005).
 - Cloud sync/accounts for **gait/health data**, and a live clinician dashboard (gait
@@ -262,7 +318,10 @@ pure-logic modules + fixture-driven known-answer tests.
   only; the demo uses the resilient stateless path (ADR-0003).
 - On-device VLM (the QRB2210 has no large NPU); cloud VLM instead, with on-device
   object detection only as the offline fallback.
-- Regulatory clearance / clinical-trial validation.
+- Regulatory clearance / a completed clinical trial — **out of scope for now, but the
+  intended direction** for the WSFC: its pitch is to *generate* recovery evidence via the
+  team's own validation, since no cane-based recovery RCT yet exists (ADR-0009; `rehab/`).
+  A firm clinical/partner commitment triggers a follow-up ADR on regulatory pathway.
 - The temp/humidity (Thermo) sensor.
 
 ## Further Notes
@@ -270,10 +329,16 @@ pure-logic modules + fixture-driven known-answer tests.
   (gait monitoring vs navigation), different relationship to the aid (instruments the
   existing aid vs replaces it), different architecture (on-device baseline/drift ML vs
   raw video/HR streaming), honest scope, and privacy-first design.
-- **Demo path:** the **Speaking Stick** is the headline "wow" — raise the stick →
-  camera frame → cloud VLM → spoken Scene Description, with the offline Proximity Alert
-  as a tactile backstop. Cane Mode gait monitoring is the secondary demo; pair it with
-  the simulated-impairment protocol to show the Drift→Alert pipeline live.
+- **Success metrics.** *Flagship (WSFC):* the feedback loop fires correctly (cue iff
+  out-of-band), the Threshold Engine fades/advances per protocol, and — as clinical outcomes
+  to validate — paretic-limb loading ↑, gait-speed trend (MCID ≥ 0.16 m/s, Tilson 2010),
+  in-band-step %, and session adherence. *Wellness:* the Drift→Alert intelligence (sustained
+  Drift alerts; a single bad session does not). Improvement-in-Score is **not** a wellness KPI
+  (a medical-claim trap, ADR-0008); under the WSFC, clinical improvement *is* the goal.
+- **Demo path:** lead with the **WSFC** — lean too hard on the cane → immediate beep; correct
+  the lean → silence; show the fading target. The **Speaking Stick** (raise → VLM → spoken
+  Scene Description, offline Proximity Alert backstop) is the secondary "wow"; wellness Cane
+  Mode + the simulated-impairment protocol demonstrates the Drift→Alert pipeline.
 - **Known implementation risks (from docs research):**
   - **Conference Wi-Fi is the top risk** for the see-and-speak path — bring a phone
     hotspot, prefer the stateless frame→VLM→TTS calls, add timeouts + a canned
@@ -286,5 +351,6 @@ pure-logic modules + fixture-driven known-answer tests.
   - BLE GATT to the phone is not covered by UNO Q docs and must be hand-rolled
     (BlueZ/`bleak`); the MIPI camera needs a GStreamer pipeline if ever revisited
     (the see-and-speak path uses a USB webcam instead).
-- **Walker Mode hardware not yet in hand:** wheel encoder and dual-grip FSRs need
-  sourcing/mounting; this is the ~2× cost accepted in ADR-0002.
+- **Walker Mode hardware not yet in hand:** wheel encoder and dual-grip pneumatic load
+  pads (one bladder+barometer per grip, ADR-0010) need sourcing/mounting; this is the ~2×
+  cost accepted in ADR-0002.

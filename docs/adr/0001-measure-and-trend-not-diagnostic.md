@@ -2,7 +2,10 @@
 
 > **Status:** accepted; amended by [ADR-0006](./0006-opt-in-training-mode-coaching-cue.md),
 > which adds an opt-in Training Mode that also coaches *in the moment*. Trend-only
-> remains the default posture.
+> remains the default posture. Superseded for the **WSFC clinical line** by
+> [ADR-0009](./0009-pivot-to-weight-support-feedback-cane.md), where real-time
+> corrective feedback against a clinician-set target is the product; this trend-only
+> posture still governs the wellness line (`wellness-v1`).
 
 Moon Walk records gait metrics, trends them against the patient's own learned
 **Baseline**, and may raise a non-medical **Alert** ("your walking has changed —

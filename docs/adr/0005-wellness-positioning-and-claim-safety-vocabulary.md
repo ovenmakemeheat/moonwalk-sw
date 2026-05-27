@@ -1,5 +1,11 @@
 # Position Moon Walk as wellness, not medicine — with an enforced claim-safety vocabulary
 
+> **Status:** accepted; binding for the **wellness line** (`wellness-v1`). Amended by
+> [ADR-0009](./0009-pivot-to-weight-support-feedback-cane.md): the **WSFC clinical line**
+> addresses stroke/rehab **Patients** and a prescribing **Clinician**, and may state a
+> therapeutic (weight-bearing retraining) intent. The User-only vocabulary below remains
+> normative for wellness copy.
+
 Moon Walk is positioned as a **consumer-wellness self-monitoring** product. The
 **User** watches their own walking trends; sharing a report with a doctor is an
 *optional* support step, not the product's centre of gravity. The device may

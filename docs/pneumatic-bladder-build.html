@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moon Walk — How to Actually Build the Pneumatic Bladder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f1419; --bg2:#0b0f14; --panel:#161d26; --panel2:#1c2530; --panel3:#11161d;
+    --line:#2a3542; --line2:#37485a;
+    --ink:#e8eef4; --dim:#9fb0c0; --faint:#6b7d8f;
+    --accent:#5ec8d8; --accent2:#7ee0a0; --warn:#f0b95c; --bad:#f07a6e; --good:#7ee0a0;
+    --air:#8ad7e6; --rubber:#d98a8a; --plastic:#9fb6c8;
+    --mono:'JetBrains Mono','SF Mono',ui-monospace,'Cascadia Code',Menlo,Consolas,monospace;
+    --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --display:'Space Grotesk',var(--sans);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:
+      radial-gradient(900px 500px at 82% -8%, rgba(94,200,216,.10), transparent 60%),
+      radial-gradient(800px 500px at -5% 12%, rgba(126,224,160,.06), transparent 55%),
+      var(--bg);
+    color:var(--ink);font-family:var(--sans);line-height:1.62;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:54px 24px 100px}
+
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);
+    font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);
+    border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line));border-radius:999px;
+    padding:5px 13px;background:color-mix(in srgb,var(--accent) 8%,var(--panel))}
+  .eyebrow .moon{color:var(--accent2)}
+  h1{font-family:var(--display);font-size:2.55rem;line-height:1.08;margin:18px 0 8px;
+    letter-spacing:-.025em;font-weight:700;
+    background:linear-gradient(100deg,#fff 30%,var(--accent) 120%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .subtitle{font-size:1.2rem;color:var(--dim);margin:0 0 4px;max-width:760px;font-weight:500}
+  .tldr{margin-top:22px;display:flex;flex-wrap:wrap;gap:10px}
+  .chip{font-family:var(--mono);font-size:.74rem;color:var(--dim);
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 11px}
+  .chip b{color:var(--accent2)}
+
+  h2{font-family:var(--display);font-size:1.5rem;margin:64px 0 14px;letter-spacing:-.015em;
+    border-top:1px solid var(--line);padding-top:34px;font-weight:600;display:flex;align-items:baseline;gap:14px}
+  h2 .n{color:var(--faint);font-family:var(--mono);font-size:1.05rem;font-weight:500}
+  h3{font-family:var(--display);font-size:1.1rem;margin:26px 0 8px;color:var(--accent2);font-weight:600}
+  p{color:var(--ink);margin:10px 0}
+  .lead{font-size:1.12rem;color:var(--dim)}
+  em{color:var(--accent2);font-style:italic}
+  code{font-family:var(--mono);background:var(--panel2);padding:2px 6px;border-radius:5px;
+    font-size:.86em;color:var(--accent)}
+
+  .callout{border-radius:14px;padding:22px 26px;margin:22px 0;position:relative;
+    border:1px solid var(--line);background:var(--panel)}
+  .callout .klabel{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;
+    text-transform:uppercase;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:9px}
+  .callout .klabel .dot{width:8px;height:8px;border-radius:50%}
+  .callout p{margin:8px 0;color:var(--ink)}
+  .callout.intuition{border-color:color-mix(in srgb,var(--accent2) 50%,var(--line));
+    background:linear-gradient(180deg,color-mix(in srgb,var(--accent2) 11%,var(--panel)),var(--panel));
+    box-shadow:0 0 0 1px color-mix(in srgb,var(--accent2) 12%,transparent),0 18px 50px -28px rgba(126,224,160,.5)}
+  .callout.intuition .klabel{color:var(--accent2)} .callout.intuition .dot{background:var(--accent2)}
+  .callout.intuition .big{font-family:var(--display);font-size:1.28rem;line-height:1.42;color:#fff;font-weight:600;margin:6px 0}
+  .callout.warn{border-color:color-mix(in srgb,var(--warn) 45%,var(--line));
+    background:linear-gradient(180deg,color-mix(in srgb,var(--warn) 9%,var(--panel)),var(--panel))}
+  .callout.warn .klabel{color:var(--warn)} .callout.warn .dot{background:var(--warn)}
+
+  .figure{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:14px 14px 8px;margin:22px 0;overflow:hidden}
+  .figure svg{width:100%;height:auto;display:block}
+  .figcap{font-size:.86rem;color:var(--faint);text-align:center;padding:10px 14px 14px;font-family:var(--mono)}
+  .figcap b{color:var(--dim)}
+
+  .math{font-family:var(--mono);background:var(--panel3);border:1px solid var(--line);
+    border-left:3px solid var(--accent);border-radius:10px;padding:16px 20px;margin:14px 0;
+    font-size:1.02rem;overflow-x:auto;color:var(--ink)}
+  .math .lbl{float:right;color:var(--faint);font-size:.78rem;font-family:var(--sans)}
+  .math .res{color:var(--accent2);font-weight:700}
+
+  /* materials grid */
+  .mats{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin:20px 0}
+  .mat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;gap:13px;align-items:flex-start}
+  .mat svg{flex:0 0 auto}
+  .mat .mt{font-weight:600;color:var(--ink);font-size:.95rem;margin:0 0 2px}
+  .mat .md{color:var(--faint);font-size:.82rem;line-height:1.45}
+  .mat .md b{color:var(--accent2);font-weight:600}
+
+  ol.steps{list-style:none;counter-reset:s;padding:0;margin:18px 0}
+  ol.steps>li{counter-increment:s;position:relative;padding:16px 18px 16px 58px;
+    margin:11px 0;background:var(--panel);border:1px solid var(--line);border-radius:11px;color:var(--dim)}
+  ol.steps>li::before{content:counter(s);position:absolute;left:15px;top:15px;
+    width:29px;height:29px;border-radius:9px;background:color-mix(in srgb,var(--accent) 20%,var(--panel2));
+    color:var(--accent);font-weight:700;display:grid;place-items:center;font-family:var(--mono);
+    border:1px solid color-mix(in srgb,var(--accent) 45%,transparent)}
+  ol.steps>li b{color:var(--ink)}
+  ol.steps>li .st{font-weight:600;color:var(--ink);display:block;margin-bottom:3px;font-family:var(--display)}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:22px 0}
+  @media(max-width:720px){.twocol{grid-template-columns:1fr}}
+  .build{border-radius:14px;border:1px solid var(--line);background:var(--panel);overflow:hidden}
+  .build .bh{padding:14px 18px;border-bottom:1px solid var(--line);background:var(--panel2)}
+  .build .bh .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+  .build .bh h4{font-family:var(--display);margin:4px 0 0;font-size:1.08rem;color:var(--ink)}
+  .build .bb{padding:6px 8px}
+  .build svg{width:100%;height:auto;display:block}
+  .build .bcap{padding:6px 16px 14px;color:var(--faint);font-size:.84rem}
+
+  table.cal{width:100%;border-collapse:collapse;margin:16px 0;font-size:.92rem}
+  table.cal th,table.cal td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)}
+  table.cal th{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600}
+  table.cal td{color:var(--dim)} table.cal td b{color:var(--ink)}
+  table.cal tr:last-child td{border-bottom:none}
+
+  footer{margin-top:70px;border-top:1px solid var(--line);padding-top:22px;color:var(--faint);font-size:.86rem}
+  footer b{color:var(--dim)}
+  a.back{color:var(--accent);text-decoration:none;font-family:var(--mono);font-size:.84rem}
+  a.back:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="eyebrow"><span class="moon">●</span> Moon Walk · Build Guide</span>
+    <h1>How to Actually Build the Pneumatic Bladder</h1>
+    <p class="subtitle">From a syringe on your desk to a soft pad under the cane handle — the trapped air <em>is</em> the sensor. The barometer just reads how hard it's squeezed.</p>
+    <div class="tldr">
+      <span class="chip">Time: <b>~1 hour</b></span>
+      <span class="chip">Cost: <b>under $5 of parts</b></span>
+      <span class="chip">Tools: <b>hot glue + scissors</b></span>
+      <span class="chip">Sensor: <b>LPS22HB barometer</b></span>
+    </div>
+  </header>
+
+  <!-- ============ 0. INTUITION ============ -->
+  <h2><span class="n">00</span> First: feel it with zero electronics</h2>
+  <p class="lead">Before wiring anything, build the mental model with something already in your kitchen.</p>
+
+  <div class="callout intuition">
+    <div class="klabel"><span class="dot"></span>The whole idea in one sentence</div>
+    <p class="big">Seal some air in a soft container. When you press it, the air can't escape — so it pushes back, and its <em>pressure</em> rises in exact proportion to how hard you press.</p>
+    <p style="color:var(--dim)">A balloon, a zip-lock bag, or a capped syringe all work. Squeeze a sealed bag and feel it resist — that resistance <em>is</em> a pressure you can measure. The barometer is just a tiny gauge that reads that pressure as a number. That's the entire sensor.</p>
+  </div>
+
+  <div class="figure">
+    <svg viewBox="0 0 760 240" role="img" aria-label="Hand pressing a sealed air pouch raises the pressure read by a barometer">
+      <!-- force arrow -->
+      <g stroke="#f0b95c" stroke-width="3" fill="#f0b95c">
+        <line x1="150" y1="22" x2="150" y2="74"/>
+        <polygon points="150,86 142,68 158,68"/>
+      </g>
+      <text x="150" y="16" fill="#f0b95c" font-family="JetBrains Mono,monospace" font-size="13" text-anchor="middle">PRESS  (your weight)</text>
+      <!-- hand (simple) -->
+      <path d="M110 92 q40 -22 80 0 l0 14 q-40 16 -80 0 z" fill="#37485a"/>
+      <!-- sealed pouch -->
+      <ellipse cx="150" cy="150" rx="78" ry="40" fill="#11161d" stroke="#37485a" stroke-width="2"/>
+      <ellipse cx="150" cy="150" rx="70" ry="32" fill="rgba(138,215,230,.16)" stroke="#5ec8d8" stroke-width="1.5"/>
+      <!-- air molecules -->
+      <g fill="#8ad7e6">
+        <circle cx="120" cy="145" r="3.5"/><circle cx="150" cy="158" r="3.5"/><circle cx="178" cy="142" r="3.5"/>
+        <circle cx="138" cy="135" r="3.5"/><circle cx="165" cy="160" r="3.5"/>
+      </g>
+      <text x="150" y="206" fill="#9fb0c0" font-family="JetBrains Mono,monospace" font-size="12" text-anchor="middle">sealed air pouch (the "spring")</text>
+      <!-- tube -->
+      <path d="M222 150 H360 a14 14 0 0 1 14 14 V164" fill="none" stroke="#37485a" stroke-width="11" stroke-linecap="round"/>
+      <path d="M222 150 H360 a14 14 0 0 1 14 14 V164" fill="none" stroke="#1c2530" stroke-width="6" stroke-linecap="round"/>
+      <text x="300" y="138" fill="#6b7d8f" font-family="JetBrains Mono,monospace" font-size="11" text-anchor="middle">thin tube → no air escapes</text>
+      <!-- barometer board -->
+      <rect x="430" y="120" width="150" height="70" rx="9" fill="#161d26" stroke="#37485a" stroke-width="2"/>
+      <rect x="448" y="138" width="34" height="34" rx="5" fill="#1c2530" stroke="#5ec8d8" stroke-width="1.5"/>
+      <circle cx="465" cy="155" r="6" fill="#11161d" stroke="#8ad7e6" stroke-width="1.5"/>
+      <text x="465" y="184" fill="#6b7d8f" font-family="JetBrains Mono,monospace" font-size="9.5" text-anchor="middle">LPS22HB</text>
+      <text x="540" y="150" fill="#7ee0a0" font-family="JetBrains Mono,monospace" font-size="13" text-anchor="middle">reads</text>
+      <text x="540" y="170" fill="#fff" font-family="JetBrains Mono,monospace" font-size="16" font-weight="700" text-anchor="middle">+8 kPa</text>
+      <!-- pressure rises label -->
+      <text x="690" y="150" fill="#9fb0c0" font-family="JetBrains Mono,monospace" font-size="11" text-anchor="middle">press harder</text>
+      <text x="690" y="166" fill="#9fb0c0" font-family="JetBrains Mono,monospace" font-size="11" text-anchor="middle">= bigger number</text>
+    </svg>
+    <div class="figcap"><b>The complete sensor.</b> Force on the pouch → trapped air pressure rises → barometer reads a number. No moving electronics, no force chip.</div>
+  </div>
+
+  <!-- ============ 1. MATERIALS ============ -->
+  <h2><span class="n">01</span> Shopping list (all cheap, all easy)</h2>
+  <div class="mats">
+    <div class="mat">
+      <svg width="40" height="56" viewBox="0 0 40 56"><rect x="11" y="6" width="18" height="40" rx="3" fill="#1c2530" stroke="#9fb6c8" stroke-width="1.5"/><rect x="14" y="2" width="12" height="8" rx="2" fill="#9fb6c8"/><line x1="20" y1="10" x2="20" y2="34" stroke="#9fb6c8" stroke-width="3"/><rect x="14" y="34" width="12" height="6" fill="rgba(138,215,230,.3)"/><path d="M16 46 l4 8 4 -8" fill="#9fb6c8"/></svg>
+      <div><p class="mt">Plastic syringe</p><p class="md"><b>10–20 ml</b>, no needle. The "desk proof" version + a perfect calibration piston.</p></div>
+    </div>
+    <div class="mat">
+      <svg width="40" height="56" viewBox="0 0 40 56"><path d="M8 14 q12 -10 24 0 q4 30 -12 38 q-16 -8 -12 -38 z" fill="rgba(217,138,138,.25)" stroke="#d98a8a" stroke-width="1.5"/><rect x="17" y="4" width="6" height="12" rx="2" fill="#d98a8a"/></svg>
+      <div><p class="mt">Balloon / silicone pouch</p><p class="md"><b>The soft bladder.</b> A thick party balloon or a small heat-sealed TPU pouch under the grip.</p></div>
+    </div>
+    <div class="mat">
+      <svg width="40" height="56" viewBox="0 0 40 56"><path d="M6 50 C6 20 34 36 34 6" fill="none" stroke="#37485a" stroke-width="8" stroke-linecap="round"/><path d="M6 50 C6 20 34 36 34 6" fill="none" stroke="#11161d" stroke-width="3.5" stroke-linecap="round"/></svg>
+      <div><p class="mt">Silicone / aquarium tube</p><p class="md"><b>~3 mm bore</b>, 20–40 cm. Carries pressure from bladder to sensor. Soft silicone seals best.</p></div>
+    </div>
+    <div class="mat">
+      <svg width="40" height="56" viewBox="0 0 40 56"><rect x="6" y="18" width="28" height="20" rx="4" fill="#161d26" stroke="#37485a" stroke-width="1.5"/><rect x="13" y="24" width="14" height="14" rx="3" fill="#1c2530" stroke="#5ec8d8" stroke-width="1.3"/><circle cx="20" cy="31" r="3.5" fill="#11161d" stroke="#8ad7e6" stroke-width="1.2"/></svg>
+      <div><p class="mt">Nano 33 BLE</p><p class="md"><b>You have this.</b> LPS22HB barometer is already on the board — no extra chip.</p></div>
+    </div>
+    <div class="mat">
+      <svg width="40" height="56" viewBox="0 0 40 56"><rect x="14" y="4" width="12" height="30" rx="2" fill="#9fb6c8"/><path d="M14 34 h12 l-2 10 h-8 z" fill="#37485a"/><path d="M18 44 q2 8 2 8 q0 -0 2 -8" fill="#f0b95c"/></svg>
+      <div><p class="mt">Hot glue / epoxy</p><p class="md"><b>The make-or-break.</b> Every joint must be air-tight. Silicone sealant also works.</p></div>
+    </div>
+    <div class="mat">
+      <svg width="40" height="56" viewBox="0 0 40 56"><rect x="4" y="22" width="32" height="22" rx="4" fill="#161d26" stroke="#37485a" stroke-width="1.5"/><text x="20" y="38" fill="#7ee0a0" font-family="monospace" font-size="11" text-anchor="middle" font-weight="700">kg</text><line x1="20" y1="14" x2="20" y2="22" stroke="#9fb0c0" stroke-width="2"/></svg>
+      <div><p class="mt">Bathroom scale</p><p class="md"><b>Your reference truth.</b> Used once, to calibrate barometer counts → kilograms.</p></div>
+    </div>
+  </div>
+
+  <!-- ============ 2. TWO BUILDS ============ -->
+  <h2><span class="n">02</span> Build it in two stages</h2>
+  <p class="lead">Stage A proves the electronics work on your desk in 15 minutes. Stage B is the real thing on the cane. Do A first — it removes all the guesswork.</p>
+
+  <div class="twocol">
+    <!-- BUILD A -->
+    <div class="build">
+      <div class="bh"><span class="tag">Stage A · desk proof</span><h4>The syringe sensor</h4></div>
+      <div class="bb">
+        <svg viewBox="0 0 360 220" role="img" aria-label="Syringe connected by tube to a barometer in a sealed cap">
+          <!-- syringe barrel -->
+          <rect x="30" y="40" width="120" height="40" rx="6" fill="#11161d" stroke="#9fb6c8" stroke-width="2"/>
+          <!-- trapped air -->
+          <rect x="78" y="44" width="68" height="32" fill="rgba(138,215,230,.18)"/>
+          <g fill="#8ad7e6"><circle cx="92" cy="60" r="2.6"/><circle cx="116" cy="54" r="2.6"/><circle cx="132" cy="66" r="2.6"/></g>
+          <!-- plunger -->
+          <rect x="60" y="46" width="20" height="28" fill="#37485a"/>
+          <line x1="40" y1="60" x2="62" y2="60" stroke="#9fb6c8" stroke-width="4"/>
+          <rect x="28" y="50" width="6" height="20" fill="#9fb6c8"/>
+          <!-- push arrow -->
+          <g stroke="#f0b95c" stroke-width="2.5" fill="#f0b95c"><line x1="10" y1="60" x2="26" y2="60"/><polygon points="34,60 22,53 22,67"/></g>
+          <text x="14" y="44" fill="#f0b95c" font-family="JetBrains Mono,monospace" font-size="10">push</text>
+          <!-- nozzle + tube -->
+          <path d="M150 60 h18 a10 10 0 0 1 10 10 v60 a10 10 0 0 0 10 10 h22" fill="none" stroke="#37485a" stroke-width="9" stroke-linecap="round"/>
+          <path d="M150 60 h18 a10 10 0 0 1 10 10 v60 a10 10 0 0 0 10 10 h22" fill="none" stroke="#11161d" stroke-width="4" stroke-linecap="round"/>
+          <!-- glue blob at nozzle -->
+          <circle cx="170" cy="60" r="7" fill="#f0b95c" opacity=".55"/>
+          <!-- sealed cap + sensor -->
+          <rect x="232" y="120" width="96" height="56" rx="8" fill="#161d26" stroke="#37485a" stroke-width="2"/>
+          <rect x="246" y="134" width="26" height="26" rx="4" fill="#1c2530" stroke="#5ec8d8" stroke-width="1.4"/>
+          <circle cx="259" cy="147" r="4.5" fill="#11161d" stroke="#8ad7e6" stroke-width="1.3"/>
+          <text x="298" y="143" fill="#7ee0a0" font-family="JetBrains Mono,monospace" font-size="10" text-anchor="middle">reads</text>
+          <text x="298" y="160" fill="#fff" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700" text-anchor="middle">+kPa</text>
+          <text x="280" y="194" fill="#6b7d8f" font-family="JetBrains Mono,monospace" font-size="9.5" text-anchor="middle">sensor in sealed cap</text>
+          <!-- glue blob at cap -->
+          <circle cx="236" cy="140" r="6" fill="#f0b95c" opacity=".55"/>
+        </svg>
+      </div>
+      <div class="bcap">Pull the plunger to trap air, glue the nozzle to the tube, glue the other end over the barometer inside a tiny sealed cap. Push the plunger → watch kPa climb. <b>If this works, the physics is proven.</b></div>
+    </div>
+
+    <!-- BUILD B -->
+    <div class="build">
+      <div class="bh"><span class="tag">Stage B · on the cane</span><h4>The handle bladder</h4></div>
+      <div class="bb">
+        <svg viewBox="0 0 360 220" role="img" aria-label="Cross-section of a cane handle with a soft air bladder under the grip">
+          <!-- body weight arrow -->
+          <g stroke="#f0b95c" stroke-width="3" fill="#f0b95c"><line x1="120" y1="8" x2="120" y2="34"/><polygon points="120,44 112,28 128,28"/></g>
+          <text x="120" y="6" fill="#f0b95c" font-family="JetBrains Mono,monospace" font-size="11" text-anchor="middle">body weight</text>
+          <!-- handle grip (curved top) -->
+          <path d="M40 70 q0 -22 40 -22 h120 q40 0 40 28 v6 H40 z" fill="#1c2530" stroke="#37485a" stroke-width="2"/>
+          <text x="130" y="64" fill="#9fb0c0" font-family="JetBrains Mono,monospace" font-size="11" text-anchor="middle">handle grip</text>
+          <!-- soft bladder -->
+          <rect x="60" y="84" width="160" height="22" rx="11" fill="rgba(217,138,138,.22)" stroke="#d98a8a" stroke-width="1.6"/>
+          <g fill="#8ad7e6"><circle cx="92" cy="95" r="2.8"/><circle cx="130" cy="98" r="2.8"/><circle cx="170" cy="93" r="2.8"/><circle cx="150" cy="96" r="2.8"/></g>
+          <text x="140" y="124" fill="#d98a8a" font-family="JetBrains Mono,monospace" font-size="10.5" text-anchor="middle">soft air bladder  (~25–35 cm²)</text>
+          <!-- shaft -->
+          <rect x="118" y="106" width="24" height="96" rx="4" fill="#161d26" stroke="#37485a" stroke-width="2"/>
+          <!-- tube inside shaft -->
+          <path d="M210 95 q22 0 22 26 v55" fill="none" stroke="#37485a" stroke-width="8" stroke-linecap="round"/>
+          <path d="M210 95 q22 0 22 26 v55" fill="none" stroke="#11161d" stroke-width="3.5" stroke-linecap="round"/>
+          <text x="262" y="150" fill="#6b7d8f" font-family="JetBrains Mono,monospace" font-size="9.5">tube</text>
+          <!-- sensor manifold lower -->
+          <rect x="206" y="180" width="64" height="34" rx="7" fill="#161d26" stroke="#37485a" stroke-width="2"/>
+          <rect x="216" y="189" width="18" height="18" rx="3" fill="#1c2530" stroke="#5ec8d8" stroke-width="1.3"/>
+          <circle cx="225" cy="198" r="3.4" fill="#11161d" stroke="#8ad7e6" stroke-width="1.1"/>
+          <text x="252" y="201" fill="#9fb0c0" font-family="JetBrains Mono,monospace" font-size="9" text-anchor="middle">Nano +</text>
+          <text x="252" y="211" fill="#9fb0c0" font-family="JetBrains Mono,monospace" font-size="9" text-anchor="middle">baro</text>
+        </svg>
+      </div>
+      <div class="bcap">Same circuit, soft pad instead of a syringe. A <b>big soft bladder under the grip</b> spreads body weight over ~30 cm² so the pressure lands inside the barometer's readable window.</div>
+    </div>
+  </div>
+
+  <div class="math">
+    Why a <b>big soft pad</b>, not a small hard piston: &nbsp; P = F / A <span class="lbl">pressure = force ÷ area</span><br>
+    35 kgf on a 19 mm cane tip (2.8 cm²) → <span style="color:var(--bad)">1,200 kPa — bursts everything ✗</span><br>
+    35 kgf on a 30 cm² handle pad &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ <span class="res">~110 kPa, soft-wall absorbs most → lands in range ✓</span>
+  </div>
+
+  <!-- ============ 3. STEP BY STEP ============ -->
+  <h2><span class="n">03</span> Step-by-step assembly</h2>
+  <ol class="steps">
+    <li><span class="st">Trap the air</span> Pull the syringe plunger halfway (Stage A), or just leave normal air in the soft bladder (Stage B). This trapped air is your spring — don't squeeze it all out.</li>
+    <li><span class="st">Connect the tube</span> Push the silicone tube firmly onto the syringe nozzle / bladder neck. Add a ring of hot glue around the joint. <b>Air leaks here are the #1 failure</b> — over-seal it.</li>
+    <li><span class="st">Make the sensor cap</span> Sit the barometer over the LPS22HB. Build a tiny sealed pocket over the sensor port (a syringe-tip cap or 3D-printed manifold) and feed the tube into it. Glue airtight, keeping the dead air space small.</li>
+    <li><span class="st">Seal everything &amp; leak-test</span> Press the bladder and hold. If the kPa reading slowly falls back to zero, you have a leak — chase it with more glue until a squeeze holds steady for 10+ seconds.</li>
+    <li><span class="st">Mount on the cane</span> (Stage B) Tuck the bladder under the handle grip, run the tube down the shaft to the Nano in a small housing near the bottom. Keep the tube from kinking.</li>
+    <li><span class="st">Calibrate against a scale</span> Stand the cane tip on a bathroom scale, press to known weights, log the pairs (see below), fit a line. Now barometer counts read out in kilograms.</li>
+  </ol>
+
+  <!-- ============ 4. AUTO-TARE ============ -->
+  <h2><span class="n">04</span> The IMU fixes the one weakness — for free</h2>
+  <p>Sealed air drifts: a warm hand, sun, or a tiny leak slowly shifts the zero. You don't fight this with better sealing — you let the <b>IMU re-zero the baseline every step</b>, during the swing phase when the cane is in the air and carrying <em>zero</em> load.</p>
+
+  <div class="figure">
+    <svg viewBox="0 0 760 150" role="img" aria-label="Gait cycle timeline showing the IMU auto-taring during swing and measuring during stance">
+      <line x1="30" y1="100" x2="730" y2="100" stroke="#37485a" stroke-width="2"/>
+      <!-- swing 1 -->
+      <rect x="40" y="60" width="150" height="40" rx="8" fill="rgba(126,224,160,.12)" stroke="#7ee0a0" stroke-width="1.5"/>
+      <text x="115" y="84" fill="#7ee0a0" font-family="JetBrains Mono,monospace" font-size="12" text-anchor="middle">SWING · load 0</text>
+      <text x="115" y="124" fill="#7ee0a0" font-family="JetBrains Mono,monospace" font-size="11" text-anchor="middle" font-weight="700">↺ TARE here ✓</text>
+      <!-- stance -->
+      <rect x="200" y="44" width="200" height="56" rx="8" fill="rgba(94,200,216,.13)" stroke="#5ec8d8" stroke-width="1.5"/>
+      <text x="300" y="70" fill="#5ec8d8" font-family="JetBrains Mono,monospace" font-size="12" text-anchor="middle">STANCE · loaded</text>
+      <text x="300" y="88" fill="#fff" font-family="JetBrains Mono,monospace" font-size="12" text-anchor="middle" font-weight="700">measure force</text>
+      <text x="300" y="124" fill="#9fb0c0" font-family="JetBrains Mono,monospace" font-size="11" text-anchor="middle">cane planted, leaning</text>
+      <!-- swing 2 -->
+      <rect x="410" y="60" width="150" height="40" rx="8" fill="rgba(126,224,160,.12)" stroke="#7ee0a0" stroke-width="1.5"/>
+      <text x="485" y="84" fill="#7ee0a0" font-family="JetBrains Mono,monospace" font-size="12" text-anchor="middle">SWING · load 0</text>
+      <text x="485" y="124" fill="#7ee0a0" font-family="JetBrains Mono,monospace" font-size="11" text-anchor="middle" font-weight="700">↺ TARE again ✓</text>
+      <!-- stance 2 -->
+      <rect x="570" y="44" width="160" height="56" rx="8" fill="rgba(94,200,216,.13)" stroke="#5ec8d8" stroke-width="1.5"/>
+      <text x="650" y="70" fill="#5ec8d8" font-family="JetBrains Mono,monospace" font-size="12" text-anchor="middle">STANCE</text>
+      <text x="650" y="88" fill="#fff" font-family="JetBrains Mono,monospace" font-size="12" text-anchor="middle" font-weight="700">measure</text>
+      <text x="380" y="22" fill="#6b7d8f" font-family="JetBrains Mono,monospace" font-size="11" text-anchor="middle">one gait cycle  →  repeat</text>
+    </svg>
+    <div class="figcap"><b>Free drift cancellation.</b> The IMU already knows when the cane is swinging (load = 0). Re-zero there each step → temperature, creep, and slow leaks all vanish.</div>
+  </div>
+
+  <!-- ============ 5. CALIBRATION TABLE ============ -->
+  <h2><span class="n">05</span> Calibration: counts → kilograms</h2>
+  <p>Press the cane onto a bathroom scale at a few known weights and log what the barometer reads. Fit a straight line through the pairs — that line converts every future reading into kg.</p>
+  <table class="cal">
+    <thead><tr><th>Scale shows</th><th>Barometer reads</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><b>0 kg</b> (cane in air)</td><td>0 kPa</td><td>baseline / tare point</td></tr>
+      <tr><td><b>10 kg</b></td><td>~3 kPa</td><td>light lean</td></tr>
+      <tr><td><b>20 kg</b></td><td>~6 kPa</td><td>typical partial weight-bearing</td></tr>
+      <tr><td><b>35 kg</b></td><td>~11 kPa</td><td>heavy lean (top of range)</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--faint);font-size:.9rem">Numbers illustrative — yours depend on bladder area and stiffness. The point: a smooth, repeatable line. Good to ~10–20%, which already beats a therapist's 20–30% tactile guess.</p>
+
+  <div class="callout warn">
+    <div class="klabel"><span class="dot"></span>Don't skip the leak test</div>
+    <p>90% of "it doesn't work" is a slow air leak at a glued joint. Squeeze, hold, and watch: a healthy sensor holds its pressure for 10+ seconds. If it bleeds down, find the hiss and re-glue before doing anything else.</p>
+  </div>
+
+  <footer>
+    <a class="back" href="./pneumatic-load-sensing.html">← Back to the approach overview</a>
+    <p style="margin-top:14px"><b>Moon Walk</b> — design concept for a consumer-wellness walking aid. This is a prototype build guide, <b>not a medical device</b>; it measures and trends a personal signal and does not diagnose, treat, or determine safe weight-bearing limits. Always defer to a clinician for medical decisions.</p>
+  </footer>
+
+</div>
+</body>
+</html>
