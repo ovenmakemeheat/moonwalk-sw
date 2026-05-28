@@ -1,0 +1,2 @@
+# InfluxDB CSV exports — large, do not commit
+*.csv
