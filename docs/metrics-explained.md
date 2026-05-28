@@ -22,6 +22,26 @@
 
 ---
 
+> ## The three headline metrics
+>
+> Three of the metrics below are the **headline set** — read them together, as **co-equals**, with
+> **no ranking among the three**. Everything else either feeds them or sets the stage.
+>
+> 1. **Symmetry & Rhythm (limp)** — [§4](#4-step-rhythm--symmetry--the-limp-meter-live-imu-only). The
+>    headline limp signal is **cane-mode temporal step-time symmetry**: the IMU symmetry ratio from the
+>    alternating L/R plant intervals, plus rhythm consistency (1−step-time CV). It's the live-today,
+>    strongest-evidence read. A future walker-mode *grip-load-asymmetry* path is a **secondary** route
+>    only — never the headline limp signal.
+> 2. **Stick Duty Factor** — [§2](#2-stick-duty-factor). The fraction of each Stick Cycle the cane is
+>    loaded; a force-free read on cane dependence.
+> 3. **Session Weight-Support Training Load** — [§8](#8-session-weight-support-training-load--the-daily-did-i-practice-score).
+>    The per-session integrated loading-quality dose (intensity × volume) — the engagement/dose figure.
+>
+> **Claim-safety binds all three** ([ADR-0009]): each is relative to the patient's *own* baseline —
+> never %-body-weight, never absolute force, never fall-risk, never a diagnosis or population norm.
+
+---
+
 ## 0. The foundation — detecting a "plant"
 
 Everything keys off knowing **when the cane strikes the ground** (a *plant*). Get this right and the
@@ -76,6 +96,8 @@ it carries BLE latency jitter. Putting a real MCU timestamp in the packet is the
 
 ## 2. Stick Duty Factor
 
+> **Headline metric** — one of the [three co-equal headline metrics](#the-three-headline-metrics).
+
 **What it is:** the fraction of each cycle the cane is **planted (leaned on)** vs swinging — a
 force-free read on cane dependence. *(Not leg-stance time — we instrument the stick, not the foot.)*
 
@@ -125,8 +147,15 @@ is a real recovery signal even when the absolute number is uncertain.
 
 ## 4. Step Rhythm & Symmetry — **the limp meter** (live, IMU-only)
 
+> **Headline metric** — the **Symmetry & Rhythm (limp)** member of the [three co-equal headline metrics](#the-three-headline-metrics).
+
 This is the single composite that *directly measures the limp*, and it ships today on the strongest
 evidence. It has **two independent halves**.
+
+> **Headline limp signal = cane temporal symmetry.** The headline read is the **cane-mode temporal
+> step-time symmetry** described below (SR + consistency, IMU-only, live today). A future **walker-mode
+> grip-load-asymmetry** read (left vs right grip loading) is a **secondary** route only — keep it for
+> later, never lead the limp story with it.
 
 ### 4a. Symmetry Ratio (SR) — "how big is the limp?"
 
@@ -178,6 +207,8 @@ banned framing). Relative to the patient's own baseline.
 **Evidence:**
 - Patterson et al. 2008, *Arch. Phys. Med. Rehabil.* — gait asymmetry as a quantifiable, trackable recovery marker. DOI [`10.1016/j.apmr.2007.08.142`](https://doi.org/10.1016/j.apmr.2007.08.142) ✅
 - Hausdorff et al. 2001, *Arch. Phys. Med. Rehabil.* — step-time variability basis for the rhythm metric. DOI [`10.1053/APMR.2001.24893`](https://doi.org/10.1053/APMR.2001.24893) ✅ *(⚠️ associates variability with fall risk — we deliberately do NOT use that framing; surface as "steadiness" only)*
+- Archer et al. 2006, *Physical Therapy* 86(12):1630–1640 — gait symmetry & speed after **lower-extremity trauma**, moving the symmetry evidence off stroke and onto our sprain/strain base. DOI [`10.2522/ptj.20060035`](https://doi.org/10.2522/ptj.20060035) (PMID 17138844) ✅
+- ⚠️ Ben Moussa Zouita et al. 2016, *J Sci Med Central (Sports Medicine)* — gait symmetry specifically after **ankle sprain**. **Low-tier journal — verify before external use.**
 - ⚠️ `metrics.md` §4.1 additionally cites **Patterson 2010** (SR standardisation), **Chisholm 2014** (step-time variability post-stroke), **Yoshioka 2022** (symmetry responds to therapy) — inline-only, verify before external use.
 
 ---
@@ -269,6 +300,8 @@ happening, and gates progression so the limp is retrained safely.
 
 ## 8. Session Weight-Support Training Load — the daily "did I practice?" score
 
+> **Headline metric** — one of the [three co-equal headline metrics](#the-three-headline-metrics); the engagement/dose figure.
+
 **What it is:** one motivating figure for "how much *quality* retraining you banked today" (a
 Whoop-Strain *analog*, not a physiological equivalence). Drives the Walk Buddies engagement layer.
 
@@ -302,6 +335,7 @@ formula but never defined there — the definitions above should be folded back 
 **Evidence (structure borrowed from training-load science — ⚠️ all inline-only in `metrics.md` §4.2, verify before external use):**
 - TRIMP / training-impulse: García-Ramos 2015 ⚠️
 - session-RPE: Tibana 2018 ⚠️, Christen 2016 ⚠️
+- session-load construct validity: Haddad et al. 2017, *Front Neurosci* 11:612, DOI [`10.3389/fnins.2017.00612`](https://doi.org/10.3389/fnins.2017.00612) (PMID 29163016) ✅
 - rehab loading-dose grounding: Mercer 2009 ⚠️, Ribeiro 2019 ⚠️, Lang 2022 ⚠️
 - Whoop-validation caveat (only HR/HRV/sleep *signals* validated, not the Strain algorithm): Miller 2022 ⚠️
 

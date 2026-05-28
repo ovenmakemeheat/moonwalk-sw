@@ -90,15 +90,26 @@ such a capture exists, the loading metrics are not demonstrable on real data.
 
 ## What this data can / can't support today
 
+> **The three headline metrics (co-equal, no ranking)** the WSFC reports together are
+> **Symmetry & Rhythm (limp)**, **Stick Duty Factor**, and **Session Weight-Support
+> Training Load** — all read **relative to the patient's own baseline** (never %BW,
+> absolute force, fall-risk, diagnosis, or population norm). Against *this* capture they
+> split unevenly: the first two are **computable now** from the device-A IMU, while
+> Session Weight-Support Training Load is **blocked on a valid loading capture** (pressure
+> reads ambient here — see above). For limp the headline is the **IMU temporal step-time
+> symmetry** (alternating L/R plant intervals + rhythm consistency), which this data
+> supports today; walker grip-load asymmetry would be a future secondary route and is not
+> present in this single-cane capture.
+
 **Computable now (device A IMU, real data):**
-- Cadence & Stick Cycle Time, Stick Duty Factor (stillness window)
-- Step Rhythm & Symmetry (the limp meter) — IMU-only
+- Cadence & Stick Cycle Time, **Stick Duty Factor** (stillness window) — *headline*
+- **Step Rhythm & Symmetry (limp)** — IMU-only — *headline*
 - Swing-angle / stride trend (Pendulum Model) — once the integrator is coded
 - A vs B comparison; `phase` and `*_norm` are pre-computed
 
 **Blocked on a valid loading capture (pressure reads ambient here):**
 - Handle Load (relative), Weight Support Target compliance
-- Session Weight-Support Training Load
+- **Session Weight-Support Training Load** — *headline*
 - Any ML model trained on loading features ([ADR-0012] model ①/②)
 
 ## Processing gotchas (apply before any analysis)

@@ -87,6 +87,16 @@ for cadence, but use the zero-cross+impact version for everything anchored to gr
 
 ## The metrics
 
+> **Headline set (co-equal, no ranking).** Of everything below, three are the WSFC's
+> **most important** read-outs and are presented **together with no ranking**:
+> **#4 Symmetry & Rhythm (limp)** (framed as **cane-mode temporal step-time symmetry** —
+> the IMU symmetry ratio from alternating L/R plant intervals + rhythm consistency,
+> `1 − step-time CV`; the live-today, strongest-evidence limp route — walker grip-load
+> asymmetry is a future secondary route, not the headline), **#2 Stick Duty Factor**
+> (force-free cane-dependence read), and **#8 Session Weight-Support Training Load**
+> (per-session loading-quality dose). All three are read **relative to the patient's own
+> baseline** — never %BW, absolute force, fall-risk, diagnosis, or population norm.
+
 ### 1. Cadence & Stick Cycle Time ✅
 - **Columns:** `t_plant[]` (from `_time` → `t_ms`).
 - **Formula:** `cycle_time = t_plant[n] − t_plant[n−1]` · `cadence = 60000 / cycle_time` · rolling-mean ~8.
@@ -207,17 +217,19 @@ only the *event source* moves from squeeze bursts (A) / synthetic rows (B) to re
 
 ## Summary table
 
+⭐ marks the **three co-equal headline metrics** (no ranking among them).
+
 | # | Metric | Key columns | Status | Blocker / need |
 |---|---|---|---|---|
 | 0 | Plant detection | `A.g{x,y,z}_dps`, `A.a{x,y,z}_ms2` | ✅ | identify swing axis |
 | 1 | Cadence / Cycle Time | `_time`→plants | ✅ | — |
-| 2 | Stick Duty Factor | gyro_mag, acc_mag | ✅ | — |
+| 2 | ⭐ **Stick Duty Factor** | gyro_mag, acc_mag | ✅ | — |
 | 3 | Stride / Velocity | swing-axis gyro, `_time` | ✅⚙️ | `L` for absolute |
-| 4 | **Symmetry & Rhythm (limp)** | plant times | ✅⚙️ | side-label (for naming only) |
+| 4 | ⭐ **Symmetry & Rhythm (limp)** | plant times | ✅⚙️ | side-label (for naming only) |
 | 5 | Handle Load (relative) | `A.pressure_pa` | 🟡 | built; proven on squeeze tests; needs walking load |
 | 6 | Baseline lean | per-step peak `dP` | 🟡⚙️ | built; demoed on synthetic walk; needs loading walk |
 | 7 | WS Target Compliance | per-step `load%` | 🟡 | built; runs on synthetic walk; needs loading walk + target |
-| 8 | Session Training Load | per-step `load%` | 🟡 | built; runs on synthetic walk; needs loading walk + target |
+| 8 | ⭐ **Session Weight-Support Training Load** | per-step `load%` | 🟡 | built; runs on synthetic walk; needs loading walk + target |
 
 **Bottom line:** metrics **0–4 (the limp meter + full temporal/trend stack) are computable on this data
 today**. Metrics **5–8 (the WSFC loading half) are built and run end-to-end** — proven on the real
