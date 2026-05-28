@@ -341,6 +341,45 @@ pure-logic modules + fixture-driven known-answer tests.
   on regulatory pathway.
 - The temp/humidity (Thermo) sensor.
 
+## Impact (Thailand)
+
+The case for Thailand is a **leverage** argument, not a big-market-number argument — Thai-specific
+sprain/strain epidemiology is thin, so we are explicit about which figures are direct, derived, or
+global. (Sourced via Semantic Scholar `s2cli` + web search; firecrawl prose quotes need verifying
+against source PDFs before external use.)
+
+- **Sprains are the #1 acute injury in Thai sport (direct, Thai).** In national-team surveillance at
+  the 30th SEA Games, the **lower leg was the most-injured body part (14%)** and **ligament
+  sprain/rupture + contusion were the most common injury type (25% of all injuries)** — Jumroenketpratheep
+  et al., *Asian J Sports Med* 2022, DOI 10.5812/asjsm.116382. (Elite-athlete cohort, n=980; no Thai
+  *general-population* incidence rate is published — **a gap**.)
+- **Most sprains rehab incorrectly, and recur (global proxy — verify before citing).** First-time
+  lateral ankle sprains recur in **~70%** of cases and **~30–40% progress to chronic ankle instability**,
+  largely from inadequate rehab / premature or improper loading — *Epidemiology of Ankle Sprains and CAI*
+  (PMC6602402); *J Foot Ankle Res* 2021, DOI 10.1186/s13047-021-00480-w. This recurrence-from-bad-loading
+  burden is exactly what optimal-loading feedback targets.
+- **Thai rehab capacity is constrained (direct, Thai).** ~**800 physiotherapy graduates/year**, described
+  as below need and unevenly distributed — *Capacity of Physiotherapy Workforce Production in Thailand*,
+  *Physiother Res Int* 2016, DOI 10.1002/pri.1629 (PMID 25891982). Many patients therefore rehab
+  **unsupervised**, with no one to correct their loading.
+- **The cost is real, and preventing re-injury is cost-effective (global — no Thai data exists).** Each
+  ankle sprain carries a median US ED charge of **~$1,029/event** (Shah et al., *Sports Health* 2016,
+  DOI 10.1177/1941738116659639); and an RCT found measures to **prevent recurrent sprains are
+  cost-effective** (Janssen et al., *Am J Sports Med* 2014, DOI 10.1177/0363546514529642) — the closest
+  economic support for the WSFC's "reduce re-injury via better loading adherence" thesis. No
+  Thailand-specific sprain cost / work-days-lost / DALY figure is published — **a genuine gap**; a Thai
+  cost estimate would have to be *derived* (global per-case cost × a Thai incidence proxy) and labelled
+  as such.
+
+**The argument.** Lower-limb sprains are the leading acute injury in Thai sport; globally most recur
+because patients load the healing limb wrong; and Thailand's scarce, unevenly-distributed therapists
+cannot supervise that loading day-to-day. A **low-cost clip-on cane that delivers the clinician's
+optimal-loading guidance in real time substitutes for absent supervision** — aiming to cut re-injury
+and speed return to function, where preventing recurrence is already shown to be cost-effective.
+*(Remaining gaps: Thai general-population sprain incidence, the cane-eligible moderate-to-severe
+subset, and any Thai economic figure — all unquantified, and presented as gaps the project's own
+validation can begin to fill.)*
+
 ## Further Notes
 - **Differentiation from the 2014 "Smart Walker" (FiCloud 2014):** different user
   (gait monitoring vs navigation), different relationship to the aid (instruments the
