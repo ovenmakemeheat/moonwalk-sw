@@ -9,8 +9,115 @@ import {
 import { useEffect, useState } from "react";
 
 import { GridPanel } from "@/components/moonwalk/panel";
-import { UsageMeter } from "@/components/moonwalk/usage-meter";
 import type { BiofeedbackMetrics } from "@/lib/biofeedback-metrics";
+import { cn } from "@user-interface/ui/lib/utils";
+
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function getGaugeTone(value: number | null) {
+  if (value === null) {
+    return {
+      accent: "#64748b",
+      label: "รอข้อมูล",
+    };
+  }
+
+  if (value < 34) {
+    return {
+      accent: "#ef4444",
+      label: "แย่",
+    };
+  }
+
+  if (value < 67) {
+    return {
+      accent: "#facc15",
+      label: "ปานกลาง",
+    };
+  }
+
+  return {
+    accent: "#41c3c0",
+    label: "ดีเยี่ยม",
+  };
+}
+
+function CircularGauge({
+  className,
+  label,
+  size = "small",
+  unit = "%",
+  value,
+}: {
+  className?: string;
+  label: string;
+  size?: "large" | "small";
+  unit?: string;
+  value: number | null;
+}) {
+  const percent = value === null ? 0 : clamp(Math.round(value), 0, 100);
+  const tone = getGaugeTone(value);
+  const trackColor = "rgba(148, 163, 184, 0.2)";
+  const valueText = value === null ? "--" : String(percent);
+
+  return (
+    <div
+      className={cn(
+        "grid justify-items-center border border-moonwalk-silver bg-moonwalk-white p-2 text-center text-moonwalk-navy dark:border-moonwalk-slate dark:bg-moonwalk-navy dark:text-moonwalk-white",
+        className,
+      )}
+    >
+      <div
+        className={cn(
+          "grid place-items-center",
+          size === "large" ? "size-36" : "size-[86px]",
+        )}
+        style={{
+          background: `conic-gradient(${tone.accent} ${percent * 3.6}deg, ${trackColor} 0deg)`,
+          clipPath: "circle(50% at 50% 50%)",
+        }}
+      >
+        <div
+          className={cn(
+            "grid place-items-center bg-moonwalk-white dark:bg-moonwalk-navy",
+            size === "large" ? "size-[112px]" : "size-[66px]",
+          )}
+          style={{ clipPath: "circle(50% at 50% 50%)" }}
+        >
+          <div>
+            <p
+              className={cn(
+                "font-bold leading-none tabular-nums",
+                size === "large" ? "text-[34px]" : "text-[22px]",
+              )}
+            >
+              {valueText}
+            </p>
+            <p className="mt-0.5 text-[10px] font-bold leading-none text-moonwalk-slate/70 dark:text-moonwalk-white/60">
+              {value === null ? "กำลังอ่าน" : unit}
+            </p>
+          </div>
+        </div>
+      </div>
+      <p
+        className={cn(
+          "mt-2 font-bold leading-none",
+          size === "large" ? "text-base" : "text-[11px]",
+        )}
+      >
+        {label}
+      </p>
+      <p
+        className="mt-1 text-[10px] font-bold leading-none"
+        style={{ color: tone.accent }}
+      >
+        {tone.label}
+      </p>
+    </div>
+  );
+}
 
 export function BiofeedbackPage({
   metrics,
@@ -31,45 +138,42 @@ export function BiofeedbackPage({
 
   const liveRhythm = isBluetoothConnected ? null : 86 + (elapsedSeconds % 3);
   const liveDuty = isBluetoothConnected ? null : 41 + (elapsedSeconds % 4);
-  const rhythmValue =
-    metrics.rhythmScore === null
-      ? liveRhythm === null
-        ? "--"
-        : String(liveRhythm)
-      : String(Math.round(metrics.rhythmScore));
-  const dutyValue =
+  const liveLoad = isBluetoothConnected ? null : 68 + (elapsedSeconds % 5);
+  const liveOverall = isBluetoothConnected ? null : 72 + (elapsedSeconds % 4);
+  const rhythmScore =
+    metrics.rhythmScore === null ? liveRhythm : Math.round(metrics.rhythmScore);
+  const dutyScore =
     metrics.dutyFactorPercent === null
-      ? liveDuty === null
-        ? "--"
-        : String(liveDuty)
-      : String(Math.round(metrics.dutyFactorPercent));
-  const wsTrainingLoadValue =
+      ? liveDuty
+      : Math.round(metrics.dutyFactorPercent);
+  const wsTrainingLoadScore =
     metrics.sessionWeightSupportTrainingLoad === null
+      ? liveLoad
+      : Math.round(metrics.sessionWeightSupportTrainingLoad);
+  const overallScore =
+    metrics.overallQualityPercent <= 0 && !isBluetoothConnected
+      ? liveOverall
+      : Math.round(metrics.overallQualityPercent);
+  const rhythmValue =
+    rhythmScore === null
+        ? "--"
+      : String(rhythmScore);
+  const dutyValue =
+    dutyScore === null
+        ? "--"
+      : String(dutyScore);
+  const wsTrainingLoadValue =
+    wsTrainingLoadScore === null
       ? "--"
-      : String(Math.round(metrics.sessionWeightSupportTrainingLoad));
+      : String(wsTrainingLoadScore);
   const targetComplianceValue =
     metrics.targetCompliancePercent === null
       ? "--"
       : `${Math.round(metrics.targetCompliancePercent)}%`;
   const headlineCards = [
-    {
-      label: "เวลาลงไม้เท้า",
-      value: dutyValue,
-      unit: "%",
-      icon: Activity,
-    },
-    {
-      label: "จังหวะสมดุล",
-      value: rhythmValue,
-      unit: "/100",
-      icon: Waves,
-    },
-    {
-      label: "ฝึกลงน้ำหนัก",
-      value: wsTrainingLoadValue,
-      unit: targetComplianceValue,
-      icon: ShieldCheck,
-    },
+    { label: "ลงไม้เท้า", value: dutyScore, icon: Activity },
+    { label: "จังหวะ", value: rhythmScore, icon: Waves },
+    { label: "ลงน้ำหนัก", value: wsTrainingLoadScore, icon: ShieldCheck },
   ];
 
   if (isBluetoothConnected && metrics.isIdle) {
@@ -106,64 +210,56 @@ export function BiofeedbackPage({
         </p>
       </GridPanel>
 
-      <div className="grid grid-cols-3 gap-2">
-        {headlineCards.map(({ label, value, unit, icon: Icon }) => (
-          <GridPanel key={label} className="p-2">
-            <div className="flex items-center justify-between gap-1">
-              <p className="truncate text-[10px] font-bold text-moonwalk-slate/70 dark:text-moonwalk-white/65">
-                {label}
-              </p>
-              <Icon className="size-3.5 shrink-0 text-moonwalk-teal" aria-hidden="true" />
-            </div>
-            <p className="mt-2 truncate text-xl font-bold leading-none">{value}</p>
-            <p className="mt-1 truncate text-[10px] font-bold text-moonwalk-slate/70 dark:text-moonwalk-white/65">
-              {unit}
-            </p>
-          </GridPanel>
-        ))}
-      </div>
-
       <GridPanel className="p-2">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold leading-none">ตัวชี้วัดหลัก</h2>
-          <span className="text-xs text-moonwalk-slate/70 dark:text-moonwalk-white/65">
-            live
-          </span>
-        </div>
-        <div className="mt-2 grid gap-2">
-          <UsageMeter
-            label="จังหวะสมดุล"
-            value={metrics.rhythmScore === null ? 0 : Math.round(metrics.rhythmScore)}
-            helper={
-              metrics.rhythmScore === null
-                ? "ต้องตรวจพบ plant อย่างน้อย 4 รอบ"
-                : "ความสม่ำเสมอของรอบก้าวเทียบกับ baseline ส่วนตัว"
-            }
+        <div className="grid grid-cols-[auto_1fr] items-center gap-3">
+          <CircularGauge
+            className="border-moonwalk-navy/10 p-2 dark:border-moonwalk-white/15"
+            label="คุณภาพ"
+            size="large"
+            value={overallScore}
           />
-          <UsageMeter
-            label="เวลาลงไม้เท้า"
-            value={metrics.dutyFactorPercent === null ? 0 : Math.round(metrics.dutyFactorPercent)}
-            helper={
-              metrics.dutyFactorPercent === null
-                ? "ต้องตรวจพบช่วงที่ไม้เท้าวางนิ่ง"
-                : "สัดส่วนเวลาที่ไม้เท้าวางรับน้ำหนักในแต่ละรอบ"
-            }
-          />
-          <UsageMeter
-            label="ฝึกลงน้ำหนัก"
-            value={
-              metrics.sessionWeightSupportTrainingLoad === null
-                ? 0
-                : Math.round(metrics.sessionWeightSupportTrainingLoad)
-            }
-            helper={
-              metrics.sessionWeightSupportTrainingLoad === null
-                ? "ต้องตรวจพบแรงกดสูงสุดรายรอบก้าว"
-                : `อยู่ในเป้าหมาย ${targetComplianceValue}`
-            }
-          />
+          <div className="grid gap-2">
+            <div className="border border-moonwalk-silver p-2 dark:border-moonwalk-slate">
+              <p className="text-[10px] font-bold text-moonwalk-slate/70 dark:text-moonwalk-white/65">
+                สถานะ
+              </p>
+              <p className="mt-1 text-base font-bold leading-none">
+                {metrics.action}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="border border-moonwalk-silver p-2 dark:border-moonwalk-slate">
+                <p className="text-[10px] text-moonwalk-slate/70 dark:text-moonwalk-white/65">
+                  เป้าหมาย
+                </p>
+                <p className="mt-1 text-sm font-bold leading-none">
+                  {targetComplianceValue}
+                </p>
+              </div>
+              <div className="border border-moonwalk-silver p-2 dark:border-moonwalk-slate">
+                <p className="text-[10px] text-moonwalk-slate/70 dark:text-moonwalk-white/65">
+                  ความมั่นใจ
+                </p>
+                <p className="mt-1 text-sm font-bold leading-none">
+                  {Math.round(metrics.confidence * 100)}%
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </GridPanel>
+
+      <div className="grid grid-cols-3 gap-2">
+        {headlineCards.map(({ label, value, icon: Icon }) => (
+          <div key={label} className="relative">
+            <Icon
+              className="absolute right-2 top-2 z-10 size-3.5 text-moonwalk-teal"
+              aria-hidden="true"
+            />
+            <CircularGauge label={label} value={value} />
+          </div>
+        ))}
+      </div>
 
       <GridPanel className="p-2">
         <div className="grid grid-cols-[1fr_auto] items-center gap-2">

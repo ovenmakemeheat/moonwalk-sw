@@ -80,6 +80,10 @@ export function HomePage({
         </div>
         <HomeProgressChart
           className="mt-2 border-moonwalk-white/30 dark:border-moonwalk-white/30"
+          currentDay={currentProgramDay}
+          isBluetoothConnected={isBluetoothConnected}
+          metrics={metrics}
+          programDays={programDays}
           tone="navy"
         />
       </GridPanel>

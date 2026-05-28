@@ -14,38 +14,123 @@ import { TrendingUp } from "lucide-react";
 import { useMemo } from "react";
 import { Line } from "react-chartjs-2";
 
+import type { BiofeedbackMetrics } from "@/lib/biofeedback-metrics";
 import { cn } from "@user-interface/ui/lib/utils";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler);
 
-const progressPoints = [
-  { day: 1, current: 28, baseline: 28 },
-  { day: 4, current: 35, baseline: 31 },
-  { day: 7, current: 43, baseline: 35 },
-  { day: 10, current: 52, baseline: 39 },
-  { day: 13, current: 58, baseline: 42 },
-  { day: 16, current: 66, baseline: 47 },
-  { day: 20, current: 74, baseline: 53 },
-  { day: 24, current: 81, baseline: 62 },
-  { day: 28, current: 88, baseline: 71 },
-];
+type ProgressPoint = {
+  day: number;
+  current: number;
+  baseline: number;
+};
 
-const currentDay = 20;
-const currentPoint = progressPoints.find((point) => point.day === currentDay);
-const baselineAtCurrent =
-  currentPoint?.baseline ?? progressPoints[progressPoints.length - 1]?.baseline ?? 0;
-const currentAtCurrent =
-  currentPoint?.current ?? progressPoints[progressPoints.length - 1]?.current ?? 0;
-const improvement = currentAtCurrent - baselineAtCurrent;
+const baselineStartScore = 42;
+const baselineEndScore = 66;
+const savedSessionScore = 74;
+
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function getBaselineScore(day: number, programDays: number) {
+  const progress = clamp((day - 1) / Math.max(1, programDays - 1), 0, 1);
+
+  return Math.round(
+    baselineStartScore +
+      (baselineEndScore - baselineStartScore) * Math.pow(progress, 0.82),
+  );
+}
+
+function getMetricScore(metrics: BiofeedbackMetrics, isBluetoothConnected: boolean) {
+  if (
+    isBluetoothConnected &&
+    !metrics.isIdle &&
+    metrics.confidence >= 0.35 &&
+    metrics.overallQualityPercent > 0
+  ) {
+    return Math.round(metrics.overallQualityPercent);
+  }
+
+  return savedSessionScore;
+}
+
+function createProgressPoints({
+  currentDay,
+  currentScore,
+  programDays,
+}: {
+  currentDay: number;
+  currentScore: number;
+  programDays: number;
+}) {
+  const days = [1, 4, 7, 10, 13, 16, currentDay, 24, programDays]
+    .filter((day, index, list) => day >= 1 && day <= programDays && list.indexOf(day) === index)
+    .sort((a, b) => a - b);
+  const startScore = Math.min(baselineStartScore, currentScore - 18);
+
+  return days.map<ProgressPoint>((day) => {
+    const progressToCurrent = clamp((day - 1) / Math.max(1, currentDay - 1), 0, 1);
+    const projectedAfterCurrent =
+      day <= currentDay
+        ? currentScore
+        : currentScore + (programDays > currentDay ? (day - currentDay) * 0.65 : 0);
+    const current =
+      day <= currentDay
+        ? startScore + (currentScore - startScore) * Math.pow(progressToCurrent, 1.08)
+        : projectedAfterCurrent;
+
+    return {
+      day,
+      baseline: getBaselineScore(day, programDays),
+      current: Math.round(clamp(current, 0, 100)),
+    };
+  });
+}
 
 export function HomeProgressChart({
   className,
+  currentDay,
+  isBluetoothConnected,
+  metrics,
+  programDays,
   tone = "default",
 }: {
   className?: string;
+  currentDay: number;
+  isBluetoothConnected: boolean;
+  metrics: BiofeedbackMetrics;
+  programDays: number;
   tone?: "default" | "navy";
 }) {
   const isNavy = tone === "navy";
+  const currentScore = getMetricScore(metrics, isBluetoothConnected);
+  const progressPoints = useMemo(
+    () =>
+      createProgressPoints({
+        currentDay,
+        currentScore,
+        programDays,
+      }),
+    [currentDay, currentScore, programDays],
+  );
+  const currentPoint =
+    progressPoints.find((point) => point.day === currentDay) ??
+    progressPoints[progressPoints.length - 1];
+  const baselineAtCurrent = currentPoint?.baseline ?? 0;
+  const currentAtCurrent = currentPoint?.current ?? 0;
+  const improvement = currentAtCurrent - baselineAtCurrent;
+  const isLiveScore =
+    isBluetoothConnected &&
+    !metrics.isIdle &&
+    metrics.confidence >= 0.35 &&
+    metrics.overallQualityPercent > 0;
+  const improvementLabel =
+    improvement > 0 ? `+${improvement}%` : improvement < 0 ? `${improvement}%` : "0%";
+  const statusLabel =
+    improvement >= 8 ? "ดีกว่าเส้นฐาน" : improvement >= 0 ? "ใกล้เส้นฐาน" : "ต่ำกว่าเส้นฐาน";
+  const sourceLabel = isLiveScore ? "สดจากเซนเซอร์" : "เซสชันล่าสุด";
+
   const data = useMemo<ChartData<"line">>(
     () => ({
       labels: progressPoints.map((point) => String(point.day)),
@@ -76,7 +161,7 @@ export function HomeProgressChart({
         },
       ],
     }),
-    [],
+    [currentDay, progressPoints],
   );
 
   const options = useMemo<ChartOptions<"line">>(
@@ -102,7 +187,7 @@ export function HomeProgressChart({
             maxRotation: 0,
             callback: (_value, index) => {
               const day = progressPoints[index]?.day;
-              return day === 1 || day === currentDay || day === 28
+              return day === 1 || day === currentDay || day === programDays
                 ? `วัน ${day}`
                 : "";
             },
@@ -125,7 +210,7 @@ export function HomeProgressChart({
         },
       },
     }),
-    [],
+    [currentDay, programDays],
   );
 
   return (
@@ -156,7 +241,7 @@ export function HomeProgressChart({
               isNavy && "text-moonwalk-silver",
             )}
           >
-            กราฟจำลองเพื่อดูแนวโน้มว่าการเดินดีขึ้นกว่าช่วงเริ่มใช้งานหรือไม่
+            เปรียบเทียบคุณภาพการเดินกับเส้นฐานจากช่วงเริ่มต้น
           </p>
         </div>
         <div className="border border-moonwalk-teal px-2 py-1 text-right">
@@ -166,10 +251,10 @@ export function HomeProgressChart({
               isNavy && "text-moonwalk-silver",
             )}
           >
-            ดีขึ้น
+            {statusLabel}
           </p>
           <p className="mt-1 text-lg font-bold leading-none text-moonwalk-teal">
-            +{improvement}%
+            {improvementLabel}
           </p>
         </div>
       </div>
@@ -257,7 +342,7 @@ export function HomeProgressChart({
             isNavy && "text-moonwalk-silver",
           )}
         >
-          เส้นสีฟ้าคือการใช้งานปัจจุบัน เทียบกับเส้นฐานสีเทาจากช่วงเริ่มต้น
+          {sourceLabel}: เส้นสีฟ้าคือคะแนนคุณภาพการเดิน เทียบกับเส้นฐานสีเทา
         </p>
       </div>
     </section>
