@@ -118,6 +118,22 @@ the robust, headline numbers — cadence in particular is reliably recovered fro
 IMU (Salarian et al. 2004; Werner et al. 2023). Lead with these; spatial metrics are
 secondary trends. (See `docs/research/gait-evidence-references.md`.)
 
+> **The three headline metrics (co-equal, no ranking).** Present these together as the
+> WSFC's most important read-outs — none leads the others:
+> 1. **Symmetry & Rhythm (limp)** — the headline limp signal is **cane-mode temporal
+>    step-time symmetry**: an IMU symmetry ratio from alternating left/right plant
+>    intervals (off one **Stick Cycle** stream), plus rhythm consistency (1 − step-time
+>    CV). Live today and the strongest-evidence route. (The **Walker Mode** grip-load
+>    asymmetry above is a *secondary / future* route, never the headline limp signal.)
+> 2. **Stick Duty Factor** — the fraction of each **Stick Cycle** the cane is loaded; a
+>    force-free read on cane dependence.
+> 3. **Session Weight-Support Training Load** — the per-session integrated
+>    loading-quality dose; the engagement / dose figure.
+>
+> All three are read **relative to the Patient's own Baseline** — never %-body-weight,
+> absolute force, fall-risk, diagnosis, or a population norm (see **Claim Safety**,
+> **Weight Support Target**).
+
 **Alert**:
 An in-app wellness nudge raised when tracked metrics drift (e.g. "your walking has
 changed — you may want to mention it to your doctor"). An awareness cue, explicitly

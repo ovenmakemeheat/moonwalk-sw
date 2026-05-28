@@ -42,6 +42,9 @@
 - **Gait asymmetry in community-ambulating stroke survivors** — Patterson et al., 2008, *Arch. Phys. Med. Rehabil.*
   https://doi.org/10.1016/j.apmr.2007.08.142
   *Supports:* gait asymmetry as a quantifiable, trackable impairment/recovery marker.
+- **Gait Symmetry and Walking Speed Analysis Following Lower-Extremity Trauma** — Archer KR, Castillo RC, MacKenzie EJ, Bosse MJ, 2006, *Physical Therapy* 86(12):1630–1640.
+  https://doi.org/10.2522/ptj.20060035 (PMID 17138844)
+  *Supports:* gait **symmetry** and walking speed are the determining functional/recovery markers after lower-limb **musculoskeletal** (non-stroke) injury — extends the symmetry-as-recovery-marker evidence off the stroke population onto lower-extremity trauma, directly relevant to the sprain/strain WSFC refocus (ADR-0013).
 
 ### Consumer-grade validation & the recovery-readiness boundary
 - **Validity and reliability of the Apple Health app on iPhone for measuring gait parameters in children, adults, and seniors** — Werner et al., 2023, *Scientific Reports*.
@@ -50,6 +53,9 @@
 - **Limb Symmetry Indexes Can Overestimate Knee Function After ACL Injury** — Wellsandt et al., 2017, *J. Orthop. Sports Phys. Ther.*
   https://doi.org/10.2519/jospt.2017.7285
   *Supports:* why a readiness/return-to-function *gate* is clinically fraught — reinforces our "track trend, never declare recovery/readiness" stance.
+- **Patient-Reported Outcomes at Return to Sport After Lateral Ankle Sprain Injuries** — Lam KC, Marshall AN, Bay RC, Wikstrom EA, 2023, *J. Athl. Train.*
+  https://doi.org/10.4085/1062-6050-0111.22
+  *Supports (supplementary):* lateral-ankle-sprain patients return to sport with **residual** pain/functional deficits — i.e. loading/function is not normalized at return — motivating an objective loading-feedback coach.
 
 ### Our sensing analog & the change-detection math
 - **Weight-Bearing Estimation for Cane Users by Using Onboard Sensors** — Ballesteros et al., 2019, *Sensors* 19(3):509.
@@ -81,6 +87,15 @@
   specific ~80% figure is not in it. **Action:** keep the qualitative statement (population-level
   classification, *not* validated individual prediction); drop the number unless citing a
   primary study that reports the AUC.
+
+- **Proprioception Rehabilitation and Gait Parameters in Athletes after Ankle Sprain** —
+  Ben Moussa Zouita A, Bousselmi M, Darragi M, Ferchichi H, Dziri C, Ben Salah FZ, 2016,
+  *J. Sci. Med. Central — Sports Medicine.* DOI not confirmed.
+  **Status: PARTIAL — LOW-TIER JOURNAL, DOI unverified; verify against source before external citation.**
+  *Supports:* in the **ankle-sprain** population specifically, an 8-week proprioception program
+  improved gait-parameter **symmetry** between injured/uninjured limb — the closest direct
+  evidence that limp/symmetry tracks sprain recovery. **Action:** locate and confirm the DOI/source
+  before citing to judges.
 
 ---
 
@@ -152,6 +167,17 @@ through the Strong/Partial verification above. (Consolidated here from the forme
   title   = {Gait asymmetry in community-ambulating stroke survivors},
   author  = {Patterson, K. K. and others},
   year    = {2008}, journal = {Arch. Phys. Med. Rehabil.}, doi = {10.1016/j.apmr.2007.08.142}}
+
+@article{archer2006gait,
+  title   = {Gait Symmetry and Walking Speed Analysis Following Lower-Extremity Trauma},
+  author  = {Archer, Kristin R. and Castillo, Renan C. and MacKenzie, Ellen J. and Bosse, Michael J.},
+  year    = {2006}, journal = {Physical Therapy}, volume = {86}, number = {12}, pages = {1630--1640},
+  doi     = {10.2522/ptj.20060035}}
+
+@article{lam2023patient,
+  title   = {Patient-Reported Outcomes at Return to Sport After Lateral Ankle Sprain Injuries},
+  author  = {Lam, Kenneth C. and Marshall, Ashley N. and Bay, R. Curtis and Wikstrom, Erik A.},
+  year    = {2023}, journal = {J. Athl. Train.}, doi = {10.4085/1062-6050-0111.22}}
 
 @article{werner2023validity,
   title   = {Validity and reliability of the Apple Health app on iPhone for measuring gait parameters in children, adults, and seniors},

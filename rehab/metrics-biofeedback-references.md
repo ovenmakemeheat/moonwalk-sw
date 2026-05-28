@@ -27,6 +27,7 @@ Resolve any DOI with `https://doi.org/<DOI>`. BibTeX: `s2cli bibtex <paperId>`.
 | 5 | Tilson JK et al. — *Meaningful Gait Speed Improvement During the First 60 Days Poststroke: Minimal Clinically Important Difference* | 2010 | Physical Therapy | `10.2522/ptj.20090079` | `6c0db560c24ca6a53ef708c34f49b23d3cfb5faf` | Gait-speed **MCID ≈ 0.16 m/s** post-stroke |
 | 6 | Perry J et al. — *Classification of walking handicap in the stroke population* | 1995 | Stroke | `10.1161/01.STR.26.6.982` | `396dbf0c844593237ae071cb78c9e03f25684687` | Gait-speed classes: household / limited-community / community ambulator |
 | 7 | Bowden MG et al. — *Anterior-Posterior Ground Reaction Forces as a Measure of Paretic Leg Contribution in Hemiparetic Walking* | 2006 | Stroke | `10.1161/01.STR.0000204063.75779.8d` | `e8811109e40738d867d12eb17809cb96e28dfd17` | Paretic-limb propulsion ~30–40% (the deficit biofeedback targets) |
+| 7a | Haddad M, Stylianides G, Djaoui L, Dellal A, Chamari K — *Session-RPE Method for Training Load Monitoring: Validity, Ecological Usefulness, and Influencing Factors* | 2017 | Frontiers in Neuroscience 11:612 | `10.3389/fnins.2017.00612` | — | Construct validity of the session-load (intensity × volume) method underpinning the §4.2 "Session Weight-Support Training Load" metric (PMID 29163016) |
 
 ## (C) Motor-learning / feedback-design papers
 

@@ -101,6 +101,17 @@ below derives from those. The organising principle:
 > and relative lean/loading (per-user) — built from a stick, about the stick.
 > It does not give ground forces or leg-segment kinetics.**
 
+### Headline set — three co-equal metrics (no ranking among them)
+The WSFC leads with **three** of the metrics below, presented together as the most important
+reads; **none outranks the others**. Each is relative to the **Patient's own Baseline** — never
+%BW, never absolute force, never fall-risk, never diagnosis, never a population norm.
+
+| Headline metric | What it is | Built from |
+|---|---|---|
+| **Symmetry & Rhythm (limp)** | Live-today, strongest-evidence limp read — **cane-mode temporal step-time symmetry**: IMU symmetry ratio from alternating L/R plant intervals + rhythm consistency (1 − step-time CV). *Walker-mode dual-grip load asymmetry is a future secondary route, never the headline.* | Tier 1 Asymmetry + Rhythm variability |
+| **Stick Duty Factor** | Fraction of each Stick Cycle the cane is loaded — a force-free read on cane dependence | Tier 1 Stick Duty Factor |
+| **Session Weight-Support Training Load** | Per-session integrated loading-quality dose (intensity × volume) — the engagement / adherence figure | Tier 3 loading × session volume |
+
 ### Tier 1 — Reliable headline metrics (temporal)
 Pure functions of Stick Cycle detection. Lead with these.
 
