@@ -5,8 +5,11 @@
 A sensor module that clips onto an ordinary walking stick or walker (the **Host Aid**)
 and turns it into an instrument. Moon Walk is the *sensor*; the things it does are
 **applications** running on that one sensor. The **flagship application is the Weight
-Support Feedback Cane (WSFC)** — real-time biofeedback that retrains a rehab patient to
-bear weight on the affected leg instead of over-leaning on the cane (see [ADR-0009]).
+Support Feedback Cane (WSFC)** — real-time biofeedback that guides a rehab Patient
+recovering from a **sprain, strain, or lower-limb soft-tissue injury** through
+**progressive optimal loading**: it cues them when they over-lean on the cane (over-protecting
+the healing limb) so they reload it at the clinician-prescribed pace and **recover faster**
+(see [ADR-0013], which refocuses the [ADR-0009] mechanism to this indication).
 The same sensor also runs two secondary applications: **wellness gait monitoring**
 (track a User's gait trend, raise a non-medical Alert) and the **Speaking Stick** (see
 the surroundings and speak a description, with an instant obstacle warning — [ADR-0003]).
@@ -35,12 +38,16 @@ asymmetry** from dual grips — the asymmetry signal a single cane cannot give.
 
 **WSFC (Weight Support Feedback Cane)**:
 Moon Walk's **flagship application**: the Moon Walk sensor on a cane, running a real-time
-weight-support biofeedback loop that trains a rehab **Patient** to load the affected leg
-instead of over-leaning on the cane. It reads **Handle Load** per step, compares it to the
-**Weight Support Target**, and cues the Patient (auditory/haptic) when out of band. Not a
+weight-support biofeedback loop that guides a rehab **Patient** recovering from a **sprain,
+strain, or lower-limb soft-tissue injury** through **progressive optimal loading** — reloading
+the healing limb at the right pace to **recover faster** instead of over-protecting it by
+over-leaning on the cane. It reads **Handle Load** per step, compares it to the **Weight
+Support Target**, and cues the Patient (auditory/haptic) when out of band. Not a
 separate device — an application/mode of the Moon Walk sensor. The feedback loop is
-**rule-based + DSP** (not ML). See [ADR-0009], [ADR-0011].
-_Avoid_: treating WSFC as a new cane to buy (it is the sensor attached to the user's own cane).
+**rule-based + DSP** (not ML). See [ADR-0013] (sprain/strain refocus), [ADR-0009] (the
+mechanism), [ADR-0011].
+_Avoid_: treating WSFC as a new cane to buy (it is the sensor attached to the user's own cane);
+framing it as stroke-only (stroke is mechanism-compatible but no longer the flagship — [ADR-0013]).
 
 **Gait**:
 The pattern of a person's walking — cadence, symmetry, swing, loading. The thing
@@ -241,15 +248,17 @@ album, **not** a "7 of 12" completion checklist.
 ## Scope (resolved)
 
 Moon Walk is **one sensor running several applications**, and **claim-safety is
-per-application** (see [ADR-0009]):
+per-application** (see [ADR-0009], [ADR-0013]):
 
 - **WSFC (flagship, clinical).** Attached to a cane, Moon Walk delivers real-time
-  weight-support biofeedback to a **Patient** under a prescribing **Clinician**, to
-  retrain weight-bearing on the affected leg. This application *may* state a therapeutic
-  intent and use real-time corrective feedback — the one place the wellness posture below
-  does **not** apply. It still makes **no** absolute-force / %-body-weight / fall-risk /
-  diagnostic claim (targets are relative to the patient's own baseline — see **Weight
-  Support Target**).
+  weight-support biofeedback to a **Patient** recovering from a **sprain, strain, or
+  lower-limb soft-tissue injury**, under a prescribing **Clinician**, to guide
+  **progressive optimal loading** of the healing limb for a **quicker recovery** (see
+  [ADR-0013]). This application *may* state a therapeutic intent (faster recovery via
+  optimal loading) and use real-time corrective feedback — the one place the wellness
+  posture below does **not** apply. It still makes **no** absolute-force / %-body-weight /
+  fall-risk / diagnostic claim (targets are relative to the patient's own baseline — see
+  **Weight Support Target**).
 - **Wellness gait monitoring (secondary, claim-safe).** For a **User**, Moon Walk
   **measures and trends** gait and may raise non-medical **Alerts**; it does **not**
   diagnose, treat, predict disease, or predict fall risk. See [ADR-0001] and [ADR-0005].
@@ -259,16 +268,16 @@ per-application** (see [ADR-0009]):
 The **no absolute-force / no %-body-weight / no fall-risk / no diagnosis** boundary holds
 across *all* applications. What the WSFC application changes vs wellness is only: **Patient**
 and a prescribing **Clinician** are legitimate; real-time therapeutic feedback is allowed; a
-weight-bearing-retraining intent is statable.
+progressive-optimal-loading / faster-recovery intent is statable.
 
 ## Claim Safety (language discipline — normative)
 
-**Claim-safety is per-application** ([ADR-0009]). The vocabulary below is normative for the
-**wellness** and **Speaking Stick** applications, and the *shared bans* (no diagnosis,
+**Claim-safety is per-application** ([ADR-0009], [ADR-0013]). The vocabulary below is normative
+for the **wellness** and **Speaking Stick** applications, and the *shared bans* (no diagnosis,
 no treatment, **no fall-risk**, **no absolute force / %-body-weight**) bind **all**
 applications including the WSFC. The **WSFC** application alone additionally *may* address a
 **Patient**, name a prescribing **Clinician**, give real-time corrective feedback, and state a
-weight-bearing-retraining intent — within those shared bans.
+progressive-optimal-loading / faster-recovery intent — within those shared bans.
 
 For the wellness application: Moon Walk lives in **wellness, not medicine**. The system may
 suggest cues, reminders, and awareness. It must not diagnose, treat, or replace professional
@@ -310,23 +319,29 @@ deliberately avoids — see [ADR-0005]). In the **WSFC** application the person 
 (see below).
 
 **Patient** (WSFC application only):
-The stroke / lower-limb rehab person using the WSFC. Unlike the wellness **User**, the Patient is
-in a therapeutic context: a **Clinician** prescribes their **Weight Support Target** and dose, and
+The person recovering from a **sprain, strain, or lower-limb soft-tissue injury** who is temporarily
+cane-dependent and using the WSFC to reload the healing limb. Unlike the wellness **User**, the Patient
+is in a therapeutic context: a **Clinician** prescribes their **Weight Support Target** and dose, and
 Moon Walk gives real-time corrective feedback. Legitimate **only** in the WSFC application — wellness
-copy still says **User**. See [ADR-0009].
+copy still says **User**. See [ADR-0013], [ADR-0009].
+_Avoid_: framing the Patient as stroke-only (stroke is mechanism-compatible but no longer the flagship).
 
 **Clinician** (a.k.a. "your doctor"):
 In **wellness**, the professional a **User** may *optionally* share a trend report with; not required
 for the wellness app to be useful. _Avoid_: implying the Clinician is the primary wellness audience.
 In **WSFC**, the Clinician is the **primary** actor — they prescribe the **Weight Support Target**,
-the fading schedule, and the session dose, and read recovery progress.
+the fading schedule (paced to the injury grade and healing), and the session dose, and read recovery
+progress.
 
 **Weight Support Target** (WSFC application):
 The per-patient cane-load ceiling the WSFC trains against, expressed as a **% of the Patient's own
-measured baseline cane-dependence** (e.g. faded 60% → 30% over weeks) — *never* %-body-weight and
-*never* an absolute-force clinical claim. kgf from the barometer is used only for bench calibration
-and an optional clinician readout, not as the target unit. This is what keeps the WSFC inside the
-shared no-%BW / no-absolute-force boundary. See [ADR-0010] and [ADR-0009].
+measured baseline cane-dependence**, **faded as the injury heals** (the Clinician sets the starting
+band and a fade pace matched to the injury grade — days to weeks for soft-tissue recovery, not the
+months of neuro retraining) — *never* %-body-weight and *never* an absolute-force clinical claim. As
+the ceiling drops, the Patient progressively reloads the healing limb (optimal loading), which is what
+drives the **quicker recovery**. kgf from the barometer is used only for bench calibration and an
+optional clinician readout, not as the target unit. This is what keeps the WSFC inside the shared
+no-%BW / no-absolute-force boundary. See [ADR-0013], [ADR-0010] and [ADR-0009].
 _Avoid_: "% body weight", "Newtons", framing it as a population norm (it is the patient's own baseline).
 
 ## Architecture (resolved)
@@ -368,3 +383,4 @@ Two boards over wired UART — see [ADR-0004].
 [ADR-0010]: ./docs/adr/0010-pneumatic-barometer-handle-load.md
 [ADR-0011]: ./docs/adr/0011-wsfc-real-time-processing-rule-based-dsp.md
 [ADR-0012]: ./docs/adr/0012-where-ml-earns-its-place-on-moonwalk-data.md
+[ADR-0013]: ./docs/adr/0013-refocus-wsfc-to-sprain-strain-recovery.md

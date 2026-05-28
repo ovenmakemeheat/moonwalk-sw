@@ -7,19 +7,25 @@
 > Baseline, Drift, Alert, …) are defined there and used precisely throughout.
 
 > **Moon Walk is one clip-on sensor that runs several applications**; this PRD leads
-> with the **flagship**, the **Weight Support Feedback Cane (WSFC)** (ADR-0009), then
-> the secondary wellness-monitoring and Speaking-Stick applications. Claim-safety is
+> with the **flagship**, the **Weight Support Feedback Cane (WSFC)** — refocused by
+> ADR-0013 onto **sprain / strain / lower-limb soft-tissue injury recovery** (the ADR-0009
+> weight-support mechanism, pointed at faster healing via progressive optimal loading) —
+> then the secondary wellness-monitoring and Speaking-Stick applications. Claim-safety is
 > **per-application** (see Scope).
 
 ## Problem Statement
 
-**Primary (WSFC).** After a stroke or lower-limb injury, a rehab Patient is meant to
-gradually reload the affected leg — but they instinctively **over-rely on the cane and
-under-load the weak leg**, which entrenches asymmetric gait and slows recovery. A
-therapist can only give vague verbal cues ("lean less on the cane") because cane load
-can't be quantified at the bedside; patients and therapists both **estimate weight-bearing
-poorly** (off by ~35% of body weight — Dabke 2004). There is no everyday tool that tells
-the Patient, in real time, when they are leaning too hard.
+**Primary (WSFC).** After a sprain, strain, or lower-limb soft-tissue injury, a rehab Patient
+is meant to **progressively reload the injured limb** — controlled, increasing load is a healing
+stimulus (the *Optimal Loading* principle of the POLICE protocol, replacing rest-only PRICE).
+But patients instinctively **guard and over-protect the injured limb, over-relying on the cane**;
+this **under-loading delays recovery** and causes stiffness and deconditioning (lean too little
+and you heal slower; too much and you risk re-injury). A therapist can only give vague verbal
+cues ("put a bit more weight on it, don't baby it") because cane offloading can't be quantified
+at the bedside; patients and therapists both **estimate weight-bearing poorly** (off by ~35% of
+body weight — Dabke 2004). There is no everyday tool that tells the Patient, in real time, when
+they are over-protecting the limb — keeping them inside the prescribed loading progression for a
+**quicker recovery** (ADR-0013).
 
 **Secondary (wellness).** Separately, a person with a mobility-affecting condition has no
 objective, continuous picture of how their own gait is changing day to day; subtle
@@ -32,16 +38,20 @@ changed enough to mention to a doctor.
 **Moon Walk** is a sensor box that clips onto the user's existing **Host Aid** and turns
 it into an instrument — the *sensor*, on which several **applications** run.
 
-**Flagship — the Weight Support Feedback Cane (WSFC)** (ADR-0009). On a cane, Moon Walk
-reads **Handle Load** every step (sensed pneumatically — a bladder under the grip read by
-the onboard barometer, ADR-0010) and compares it to the Patient's **Weight Support Target**:
-a per-patient cane-load ceiling, set by a **Clinician** from a baseline walk and **faded
-−10%/week (≈60%→30% of the patient's own baseline cane-dependence)**, advancing only when
-≥80% of steps land in-band. When the Patient over-leans, Moon Walk gives an **immediate
-auditory (default) or haptic cue** — training them to load the affected leg. The target is
-**% of the patient's own baseline**, never %body-weight and never an absolute-force claim
-(kgf is bench-calibration only). This is the evidence-backed loop from the cane biofeedback
-RCTs (Jung 2015, Kang 2021; see [`rehab/`](../rehab)).
+**Flagship — the Weight Support Feedback Cane (WSFC)** (ADR-0013, refocusing ADR-0009). On a
+cane, Moon Walk reads **Handle Load** every step (sensed pneumatically — a bladder under the
+grip read by the onboard barometer, ADR-0010) and compares it to the Patient's **Weight Support
+Target**: a per-patient cane-load ceiling, set by a **Clinician** from a baseline walk and
+**faded as the injury heals** (the Clinician paces the fade to the injury grade — days to weeks
+for soft-tissue recovery — advancing only when ≥80% of steps land in-band). When the Patient
+over-leans (over-protecting the healing limb), Moon Walk gives an **immediate auditory (default)
+or haptic cue** — keeping them inside the prescribed loading progression so the limb is
+reloaded at the right pace for a **quicker recovery**. The target is **% of the patient's own
+baseline**, never %body-weight and never an absolute-force claim (kgf is bench-calibration only).
+The loop rests on the **Optimal Loading** principle (POLICE; Bleakley et al. 2012) — controlled
+progressive load accelerates soft-tissue healing. No cane-biofeedback RCT for sprain/strain
+recovery yet exists, so the WSFC's pitch is to *generate* that evidence via the team's own
+validation (ADR-0013; see [`rehab/`](../rehab)).
 
 **Secondary — wellness gait monitoring** (ADR-0005). The same sensor also **measures and
 trends** the user's **Gait** — cadence, duty factor, loading, asymmetry, stride/velocity
@@ -94,11 +104,11 @@ intelligence. They are linked by a wired UART.
 11. As a user, I want to *optionally* export a trend report to share with my doctor, so that they can see objective data if I choose to involve them.
 12. As a user, I want my data to stay on my device and phone by default, so that my health information is private.
 
-### WSFC — flagship (Patient + prescribing Clinician · ADR-0009)
-- **US-W1.** As a Patient, I want an immediate cue (beep/haptic) the moment I lean too hard on the cane, so that I learn to load my affected leg instead of the cane.
-- **US-W2.** As a Clinician, I want to set the Patient's Weight Support Target from a baseline walk and have it fade automatically (−10%/week, ≈60%→30% of their own baseline cane-dependence), advancing only when ≥80% of steps are in-band, so that the retraining progresses safely without me re-tuning it each visit.
-- **US-W3.** As a Clinician, I want to prescribe a session dose (~30 min × 3–5/week × 4–6 weeks) and see in-band-step % per session, so that I can track whether the Patient is doing the work correctly.
-- **US-W4.** As a Clinician, I want recovery progress (paretic loading ↑, gait-speed trend, adherence) in one view, so that I judge clinical improvement objectively rather than by eye.
+### WSFC — flagship (Patient + prescribing Clinician · ADR-0013, ADR-0009)
+- **US-W1.** As a Patient recovering from a sprain/strain, I want an immediate cue (beep/haptic) the moment I lean too hard on the cane, so that I stop over-protecting my injured limb and reload it enough to heal faster.
+- **US-W2.** As a Clinician, I want to set the Patient's Weight Support Target from a baseline walk and have it fade as the injury heals — at a pace I set for the injury grade, advancing only when ≥80% of steps are in-band — so that the loading progression advances safely without me re-tuning it each visit.
+- **US-W3.** As a Clinician, I want to prescribe a session dose (e.g. ~20–30 min × several/week over the recovery period) and see in-band-step % per session, so that I can track whether the Patient is loading the limb correctly.
+- **US-W4.** As a Clinician, I want recovery progress (injured-limb loading ↑, time-to-full-weight-bearing, gait-speed trend, adherence) in one view, so that I judge recovery objectively rather than by eye.
 - **US-W5.** As a Patient, I want the target framed as "% of your own baseline," never %body-weight or a force reading, so that the device stays an honest coach and never a medical scale.
 
 ### Clinician — wellness (optional — only if the User chooses to share)
@@ -206,22 +216,28 @@ intelligence. They are linked by a wired UART.
     simulated feed; the current build is full-colour Pokémon-Emerald art. **Under the WSFC it
     is the adherence skin** — the MOVE bar tracks live in-band loading and rewards track
     session adherence.
-13. **WSFC Feedback Loop (Nano)** *(deep, flagship · ADR-0009)* — input: per-step Handle Load
-    + the current **Weight Support Target** band; output: a real-time **auditory (default) /
-    haptic** cue while load is out-of-band, and a per-step in-band/out-of-band classification.
-    Runs on the always-on Nano so feedback is immediate and works offline. Pure function of
-    the load stream + target.
+13. **WSFC Feedback Loop (Nano)** *(deep, flagship · ADR-0013, ADR-0009)* — input: per-step Handle
+    Load + the current **Weight Support Target** band; output: a real-time **auditory (default) /
+    haptic** cue while load is out-of-band (over-leaning = over-protecting the healing limb), and a
+    per-step in-band/out-of-band classification. Runs on the always-on Nano so feedback is immediate
+    and works offline. Pure function of the load stream + target.
 14. **Threshold Engine** *(deep, Linux)* — input: the Patient's baseline cane-dependence +
-    week number + in-band history; output: the current **Weight Support Target** (faded
-    −10%/week from ≈60%→30% of baseline), the advancement decision (advance only at ≥80%
-    in-band steps), and per-session in-band-% logging. Pure logic over the session series;
-    the Clinician sets the starting band and dose.
+    elapsed recovery time + in-band history; output: the current **Weight Support Target** (the
+    cane-load ceiling faded as the injury heals, at the Clinician-set pace for the injury grade),
+    the advancement decision (advance only at ≥80% in-band steps), and per-session in-band-% logging.
+    Pure logic over the session series; the Clinician sets the starting band, fade pace, and dose.
 
 ### Key technical decisions
-- **Per-application claim-safety** (ADR-0009, amending ADR-0005). One sensor, several
+- **Flagship targets sprain/strain recovery, not stroke** (ADR-0013, refocusing ADR-0009).
+  The WSFC mechanism is condition-agnostic; the flagship indication is now **sprain / strain /
+  lower-limb soft-tissue injury**, with **quicker recovery via progressive optimal loading**
+  (POLICE) as the value prop. Stroke/neuro retraining stays mechanism-compatible but is no longer
+  the headline. Evidence base shifts from the stroke cane-biofeedback RCTs to the optimal-loading
+  literature; cane-biofeedback-for-sprain recovery is white space the team aims to *generate*.
+- **Per-application claim-safety** (ADR-0009, ADR-0013, amending ADR-0005). One sensor, several
   applications; the claim posture depends on which is running. The **WSFC** (flagship)
   addresses a **Patient** under a prescribing **Clinician**, gives real-time therapeutic
-  feedback, and may state a weight-bearing-retraining intent. The **wellness** application
+  feedback, and may state a progressive-optimal-loading / faster-recovery intent. The **wellness** application
   keeps the **User** framing: awareness/guidance language (cue, reminder, self-monitoring),
   with the MEDICAL CLAIM SAFETY disclaimer inline on every Alert + a persistent footer. A
   **shared boundary binds all applications**: no diagnosis, no disease/fall-risk prediction,
@@ -280,8 +296,8 @@ fixtures, shared between the validation protocol and the test suite.
 - **WSFC Feedback Loop** — given a recorded load stream + a target band, assert the cue
   fires exactly while load is out-of-band (and stays silent in-band), and that per-step
   in/out classification matches known-answer fixtures (the flagship intelligence claim).
-- **Threshold Engine** — given synthetic session series, assert the target fades −10%/week,
-  advances only at ≥80% in-band, and never advances on a sub-threshold week.
+- **Threshold Engine** — given synthetic session series, assert the target ceiling fades at the
+  clinician-set pace, advances only at ≥80% in-band, and never advances on a sub-threshold session.
 - **Look Gesture + Proximity Detector** — given recorded/synthetic IMU+ToF streams,
   assert the Look Gesture fires on a raise/point and not on ordinary walking
   (debounce), and that the Proximity Alert triggers at the threshold with hysteresis.
@@ -293,9 +309,9 @@ pure-logic modules + fixture-driven known-answer tests.
 
 ## Out of Scope
 - Diagnosis, disease prediction, **fall-risk prediction**, or any diagnostic/medical
-  advice — in **every** application including the WSFC (ADR-0001, ADR-0005, ADR-0009).
-  The WSFC *does* deliver therapeutic weight-bearing feedback prescribed by a Clinician,
-  but it neither diagnoses nor predicts; it retrains a prescribed behaviour.
+  advice — in **every** application including the WSFC (ADR-0001, ADR-0005, ADR-0009, ADR-0013).
+  The WSFC *does* deliver therapeutic progressive-loading feedback prescribed by a Clinician,
+  but it neither diagnoses nor predicts; it coaches a prescribed loading progression.
 - Absolute-force / %-body-weight claims (ADR-0010) — kgf is internal calibration only; the
   WSFC target is % of the patient's own baseline cane-dependence.
 - Stress / emotional-state inference — Moon Walk senses gait and handle load only;
@@ -320,8 +336,9 @@ pure-logic modules + fixture-driven known-answer tests.
   object detection only as the offline fallback.
 - Regulatory clearance / a completed clinical trial — **out of scope for now, but the
   intended direction** for the WSFC: its pitch is to *generate* recovery evidence via the
-  team's own validation, since no cane-based recovery RCT yet exists (ADR-0009; `rehab/`).
-  A firm clinical/partner commitment triggers a follow-up ADR on regulatory pathway.
+  team's own validation, since no cane-biofeedback recovery RCT for sprain/strain yet exists
+  (ADR-0013, ADR-0009; `rehab/`). A firm clinical/partner commitment triggers a follow-up ADR
+  on regulatory pathway.
 - The temp/humidity (Thermo) sensor.
 
 ## Further Notes
@@ -330,13 +347,15 @@ pure-logic modules + fixture-driven known-answer tests.
   existing aid vs replaces it), different architecture (on-device baseline/drift ML vs
   raw video/HR streaming), honest scope, and privacy-first design.
 - **Success metrics.** *Flagship (WSFC):* the feedback loop fires correctly (cue iff
-  out-of-band), the Threshold Engine fades/advances per protocol, and — as clinical outcomes
-  to validate — paretic-limb loading ↑, gait-speed trend (MCID ≥ 0.16 m/s, Tilson 2010),
-  in-band-step %, and session adherence. *Wellness:* the Drift→Alert intelligence (sustained
-  Drift alerts; a single bad session does not). Improvement-in-Score is **not** a wellness KPI
-  (a medical-claim trap, ADR-0008); under the WSFC, clinical improvement *is* the goal.
-- **Demo path:** lead with the **WSFC** — lean too hard on the cane → immediate beep; correct
-  the lean → silence; show the fading target. The **Speaking Stick** (raise → VLM → spoken
+  out-of-band), the Threshold Engine fades/advances per protocol, and — as recovery outcomes
+  to validate — injured-limb loading ↑, **time-to-full-weight-bearing / recovery rate**,
+  gait-speed trend, in-band-step %, and session adherence. *Wellness:* the Drift→Alert
+  intelligence (sustained Drift alerts; a single bad session does not). Improvement-in-Score
+  is **not** a wellness KPI (a medical-claim trap, ADR-0008); under the WSFC, faster recovery
+  *is* the goal.
+- **Demo path:** lead with the **WSFC** — over-protect the injured limb by leaning too hard on
+  the cane → immediate beep; reload the limb correctly → silence; show the target fading as
+  recovery progresses. The **Speaking Stick** (raise → VLM → spoken
   Scene Description, offline Proximity Alert backstop) is the secondary "wow"; wellness Cane
   Mode + the simulated-impairment protocol demonstrates the Drift→Alert pipeline.
 - **Known implementation risks (from docs research):**
