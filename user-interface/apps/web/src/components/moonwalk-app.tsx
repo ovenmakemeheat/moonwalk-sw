@@ -8,6 +8,7 @@ import { BluetoothConnectOverlay } from "@/components/moonwalk/bluetooth-connect
 import { BottomNav } from "@/components/moonwalk/bottom-nav";
 import { StickyDeviceBar } from "@/components/moonwalk/device-bar";
 import { HomePage } from "@/components/moonwalk/home-page";
+import { LiveRehabMode } from "@/components/moonwalk/live-rehab-mode";
 import { SettingsPage } from "@/components/moonwalk/settings-page";
 import { SignalsPage } from "@/components/moonwalk/signals-page";
 import { devices, type DeviceId, type PageId } from "@/components/moonwalk-data";
@@ -251,6 +252,12 @@ export default function MoonWalkApp() {
         />
 
         {content}
+
+        <LiveRehabMode
+          deviceLabel={selectedDeviceLabel ?? selectedDevice}
+          isBluetoothConnected={bluetooth.isConnected}
+          metrics={biofeedbackMetrics}
+        />
 
         <div className="border border-moonwalk-silver bg-moonwalk-white p-2 text-xs text-moonwalk-slate dark:border-moonwalk-white/20 dark:bg-moonwalk-navy dark:text-moonwalk-white/65">
           <span>โมดูลติดตั้งกับ {selectedDeviceLabel}</span>
