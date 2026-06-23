@@ -136,7 +136,7 @@ function SignalRow({
   };
 
   return (
-    <div className="grid min-h-12 grid-cols-[52px_76px_1fr_42px] items-center border-b border-moonwalk-silver bg-moonwalk-white last:border-b-0 dark:border-moonwalk-white/15 dark:bg-moonwalk-navy">
+    <div className="grid min-h-12 grid-cols-[52px_76px_1fr_42px] items-center border-b border-moonwalk-silver bg-moonwalk-white last:border-b-0 md:min-h-16 md:grid-cols-[64px_100px_1fr_56px] dark:border-moonwalk-white/15 dark:bg-moonwalk-navy">
       <div className="grid h-full grid-cols-[4px_1fr] border-r border-moonwalk-silver dark:border-moonwalk-white/15">
         <span
           className={cn(
@@ -341,7 +341,7 @@ export function SignalsPage({
       </GridPanel>
 
       <GridPanel className="p-0">
-        <div className="grid grid-cols-[52px_76px_1fr_42px] border-b border-moonwalk-navy bg-moonwalk-silver/40 text-moonwalk-navy dark:border-moonwalk-white dark:bg-moonwalk-white/10 dark:text-moonwalk-white">
+        <div className="grid grid-cols-[52px_76px_1fr_42px] border-b border-moonwalk-navy bg-moonwalk-silver/40 text-moonwalk-navy md:grid-cols-[64px_100px_1fr_56px] dark:border-moonwalk-white dark:bg-moonwalk-white/10 dark:text-moonwalk-white">
           <p className="border-r border-moonwalk-navy/15 px-1.5 py-1 text-[9px] font-bold uppercase leading-none dark:border-moonwalk-white/20">
             col
           </p>

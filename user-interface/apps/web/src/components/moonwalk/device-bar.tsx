@@ -118,7 +118,7 @@ export function StickyDeviceBar({
   const canOpenBluetooth = bluetoothState !== "unsupported";
 
   return (
-    <section className="sticky top-0 z-30 -mx-3 border-y border-moonwalk-navy bg-moonwalk-white text-moonwalk-navy shadow-[0_1px_0_rgba(11,16,31,0.18)] dark:border-moonwalk-white dark:bg-moonwalk-navy dark:text-moonwalk-white md:mx-0 md:border-x">
+    <section className="sticky top-0 z-30 -mx-3 border-y border-moonwalk-navy bg-moonwalk-white text-moonwalk-navy shadow-[0_1px_0_rgba(11,16,31,0.18)] md:mx-0 md:border-x dark:border-moonwalk-white dark:bg-moonwalk-navy dark:text-moonwalk-white">
       <div className="grid grid-cols-[1fr_auto] items-center gap-2 border-b border-moonwalk-white bg-moonwalk-navy px-3 py-1.5 text-moonwalk-white">
         <div className="flex min-w-0 items-center gap-2">
           <Bluetooth

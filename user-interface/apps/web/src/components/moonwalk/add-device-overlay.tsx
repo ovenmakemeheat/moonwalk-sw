@@ -4,8 +4,8 @@ import { Plus, X } from "lucide-react";
 
 export function AddDeviceOverlay({ onClose }: { onClose: () => void }) {
   return (
-    <div className="font-line-seed-th fixed inset-0 z-30 bg-moonwalk-white text-moonwalk-navy dark:bg-moonwalk-navy dark:text-moonwalk-white">
-      <div className="grid h-full grid-rows-[auto_1fr_auto]">
+    <div className="font-line-seed-th fixed inset-0 z-30 bg-moonwalk-white text-moonwalk-navy md:flex md:items-center md:justify-center md:bg-moonwalk-navy/60 md:dark:bg-black/60 dark:bg-moonwalk-navy dark:text-moonwalk-white">
+      <div className="grid h-full grid-rows-[auto_1fr_auto] md:h-auto md:max-h-[85vh] md:w-full md:max-w-lg md:border md:border-moonwalk-navy md:bg-moonwalk-white md:shadow-xl md:dark:border-moonwalk-white md:dark:bg-moonwalk-navy">
         <header className="grid grid-cols-[1fr_auto] items-center border-b border-moonwalk-navy p-3 dark:border-moonwalk-white">
           <div>
             <p className="text-xs text-moonwalk-slate/70 dark:text-moonwalk-white/65">

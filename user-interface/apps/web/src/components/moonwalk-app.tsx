@@ -217,8 +217,8 @@ export default function MoonWalkApp() {
 
   if (!isMounted) {
     return (
-      <main className="h-full overflow-y-auto bg-moonwalk-white text-moonwalk-navy dark:bg-moonwalk-navy dark:text-moonwalk-white">
-        <div className="font-line-seed-th mx-auto grid min-h-full w-full max-w-6xl gap-2 px-3 pb-20 pt-0 md:px-5 md:pt-3">
+      <main className="h-full overflow-y-auto bg-moonwalk-white text-moonwalk-navy md:pl-48 dark:bg-moonwalk-navy dark:text-moonwalk-white">
+        <div className="font-line-seed-th mx-auto grid min-h-full w-full max-w-6xl gap-2 px-3 pb-20 pt-0 md:px-6 md:pt-4 lg:px-8">
           <section className="sticky top-0 z-10 -mx-3 border-y border-moonwalk-navy bg-moonwalk-white text-moonwalk-navy dark:border-moonwalk-white dark:bg-moonwalk-navy dark:text-moonwalk-white md:mx-0 md:border-x">
             <div className="h-12 border-b border-moonwalk-white bg-moonwalk-navy" />
             <div className="h-12" />
@@ -231,8 +231,8 @@ export default function MoonWalkApp() {
   }
 
   return (
-    <main className="h-full overflow-y-auto bg-moonwalk-white text-moonwalk-navy dark:bg-moonwalk-navy dark:text-moonwalk-white">
-      <div className="font-line-seed-th mx-auto grid min-h-full w-full max-w-6xl gap-2 px-3 pb-20 pt-0 md:px-5 md:pt-3">
+    <main className="h-full overflow-y-auto bg-moonwalk-white text-moonwalk-navy md:pl-48 dark:bg-moonwalk-navy dark:text-moonwalk-white">
+      <div className="font-line-seed-th mx-auto grid min-h-full w-full max-w-6xl gap-2 px-3 pb-20 pt-0 md:px-6 md:pt-4 lg:px-8">
         <StickyDeviceBar
           selectedDevice={selectedDevice}
           onDeviceChange={setSelectedDevice}

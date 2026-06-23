@@ -88,7 +88,7 @@ export function HomePage({
         />
       </GridPanel>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
         <MiniStatus
           label="บลูทูธ"
           value={isBluetoothConnected ? "เชื่อมต่อ" : "ยังไม่เชื่อมต่อ"}
@@ -172,7 +172,7 @@ export function HomePage({
           <Sparkles className="size-5" aria-hidden="true" />
           <h2 className="text-lg font-bold leading-none">คำแนะนำ</h2>
         </div>
-        <div className="mt-2 grid gap-2">
+        <div className="mt-2 grid gap-2 md:grid-cols-2 lg:grid-cols-3">
           {[
             {
               title: "คำแนะนำจากรอบล่าสุด",

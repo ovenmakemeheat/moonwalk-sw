@@ -210,46 +210,47 @@ export function BiofeedbackPage({
         </p>
       </GridPanel>
 
-      <GridPanel className="p-2">
-        <div className="grid grid-cols-[auto_1fr] items-center gap-3">
-          <CircularGauge
-            className="border-moonwalk-navy/10 p-2 dark:border-moonwalk-white/15"
-            label="คุณภาพ"
-            size="large"
-            value={overallScore}
-          />
-          <div className="grid gap-2">
-            <div className="border border-moonwalk-silver p-2 dark:border-moonwalk-slate">
-              <p className="text-[10px] font-bold text-moonwalk-slate/70 dark:text-moonwalk-white/65">
-                สถานะ
-              </p>
-              <p className="mt-1 text-base font-bold leading-none">
-                {metrics.action}
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
+      <div className="grid gap-2 md:grid-cols-2">
+        <GridPanel className="p-2">
+          <div className="grid grid-cols-[auto_1fr] items-center gap-3">
+            <CircularGauge
+              className="border-moonwalk-navy/10 p-2 dark:border-moonwalk-white/15"
+              label="คุณภาพ"
+              size="large"
+              value={overallScore}
+            />
+            <div className="grid gap-2">
               <div className="border border-moonwalk-silver p-2 dark:border-moonwalk-slate">
-                <p className="text-[10px] text-moonwalk-slate/70 dark:text-moonwalk-white/65">
-                  เป้าหมาย
+                <p className="text-[10px] font-bold text-moonwalk-slate/70 dark:text-moonwalk-white/65">
+                  สถานะ
                 </p>
-                <p className="mt-1 text-sm font-bold leading-none">
-                  {targetComplianceValue}
+                <p className="mt-1 text-base font-bold leading-none">
+                  {metrics.action}
                 </p>
               </div>
-              <div className="border border-moonwalk-silver p-2 dark:border-moonwalk-slate">
-                <p className="text-[10px] text-moonwalk-slate/70 dark:text-moonwalk-white/65">
-                  ความมั่นใจ
-                </p>
-                <p className="mt-1 text-sm font-bold leading-none">
-                  {Math.round(metrics.confidence * 100)}%
-                </p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="border border-moonwalk-silver p-2 dark:border-moonwalk-slate">
+                  <p className="text-[10px] text-moonwalk-slate/70 dark:text-moonwalk-white/65">
+                    เป้าหมาย
+                  </p>
+                  <p className="mt-1 text-sm font-bold leading-none">
+                    {targetComplianceValue}
+                  </p>
+                </div>
+                <div className="border border-moonwalk-silver p-2 dark:border-moonwalk-slate">
+                  <p className="text-[10px] text-moonwalk-slate/70 dark:text-moonwalk-white/65">
+                    ความมั่นใจ
+                  </p>
+                  <p className="mt-1 text-sm font-bold leading-none">
+                    {Math.round(metrics.confidence * 100)}%
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </GridPanel>
+        </GridPanel>
 
-      <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2 md:grid-cols-1 md:grid-rows-3">
         {headlineCards.map(({ label, value, icon: Icon }) => (
           <div key={label} className="relative">
             <Icon
@@ -259,6 +260,7 @@ export function BiofeedbackPage({
             <CircularGauge label={label} value={value} />
           </div>
         ))}
+        </div>
       </div>
 
       <GridPanel className="p-2">

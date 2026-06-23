@@ -95,8 +95,8 @@ export function BluetoothConnectOverlay({
   const isIosUnsupported = state === "ios-unsupported";
 
   return (
-    <div className="font-line-seed-th fixed inset-0 z-40 bg-moonwalk-white text-moonwalk-navy dark:bg-moonwalk-navy dark:text-moonwalk-white">
-      <div className="grid h-full grid-rows-[auto_1fr_auto]">
+    <div className="font-line-seed-th fixed inset-0 z-40 bg-moonwalk-white text-moonwalk-navy md:flex md:items-center md:justify-center md:bg-moonwalk-navy/60 md:dark:bg-black/60 dark:bg-moonwalk-navy dark:text-moonwalk-white">
+      <div className="grid h-full grid-rows-[auto_1fr_auto] md:h-auto md:max-h-[85vh] md:w-full md:max-w-lg md:border md:border-moonwalk-navy md:bg-moonwalk-white md:shadow-xl md:dark:border-moonwalk-white md:dark:bg-moonwalk-navy">
         <header className="grid grid-cols-[1fr_auto] items-center border-b border-moonwalk-navy p-3 dark:border-moonwalk-white">
           <div className="min-w-0">
             <p className="text-xs uppercase leading-none text-moonwalk-slate/70 dark:text-moonwalk-white/60">

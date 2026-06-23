@@ -67,60 +67,62 @@ export function SettingsPage({
         </div>
       </GridPanel>
 
-      <GridPanel>
-        <div className="flex items-center gap-2">
-          <Sun className="size-5" aria-hidden="true" />
-          <h2 className="text-lg font-bold leading-none">ธีม</h2>
-        </div>
-        <div className="mt-2 grid grid-cols-3 gap-2">
-          <ThemeButton
-            active={currentTheme === "light"}
-            icon={Sun}
-            label="สว่าง"
-            onClick={() => setTheme("light")}
-          />
-          <ThemeButton
-            active={currentTheme === "dark"}
-            icon={Moon}
-            label="มืด"
-            onClick={() => setTheme("dark")}
-          />
-          <ThemeButton
-            active={currentTheme === "system"}
-            icon={Activity}
-            label="ระบบ"
-            onClick={() => setTheme("system")}
-          />
-        </div>
-      </GridPanel>
+      <div className="grid gap-2 md:grid-cols-2">
+        <GridPanel>
+          <div className="flex items-center gap-2">
+            <Sun className="size-5" aria-hidden="true" />
+            <h2 className="text-lg font-bold leading-none">ธีม</h2>
+          </div>
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            <ThemeButton
+              active={currentTheme === "light"}
+              icon={Sun}
+              label="สว่าง"
+              onClick={() => setTheme("light")}
+            />
+            <ThemeButton
+              active={currentTheme === "dark"}
+              icon={Moon}
+              label="มืด"
+              onClick={() => setTheme("dark")}
+            />
+            <ThemeButton
+              active={currentTheme === "system"}
+              icon={Activity}
+              label="ระบบ"
+              onClick={() => setTheme("system")}
+            />
+          </div>
+        </GridPanel>
 
-      <GridPanel>
-        <div className="grid grid-cols-[1fr_auto] items-center gap-2">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <Bluetooth className="size-5" aria-hidden="true" />
-              <h2 className="text-lg font-bold leading-none">Bluetooth</h2>
+        <GridPanel>
+          <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <Bluetooth className="size-5" aria-hidden="true" />
+                <h2 className="text-lg font-bold leading-none">Bluetooth</h2>
+              </div>
+              <p className="mt-2 truncate text-xs text-moonwalk-slate/70 dark:text-moonwalk-white/65">
+                {bluetoothDevice?.name ?? "ยังไม่ได้เลือกอุปกรณ์"}
+              </p>
             </div>
-            <p className="mt-2 truncate text-xs text-moonwalk-slate/70 dark:text-moonwalk-white/65">
-              {bluetoothDevice?.name ?? "ยังไม่ได้เลือกอุปกรณ์"}
+            <p className="border border-moonwalk-silver px-2 py-1 text-xs font-bold uppercase dark:border-moonwalk-white/20">
+              {bluetoothState}
             </p>
           </div>
-          <p className="border border-moonwalk-silver px-2 py-1 text-xs font-bold uppercase dark:border-moonwalk-white/20">
-            {bluetoothState}
-          </p>
-        </div>
-        <button
-          type="button"
-          className="mt-2 min-h-12 w-full border border-moonwalk-teal bg-moonwalk-teal text-base font-bold text-moonwalk-navy"
-          onClick={onOpenBluetooth}
-        >
-          จัดการการเชื่อมต่อ
-        </button>
-      </GridPanel>
+          <button
+            type="button"
+            className="mt-2 min-h-12 w-full border border-moonwalk-teal bg-moonwalk-teal text-base font-bold text-moonwalk-navy"
+            onClick={onOpenBluetooth}
+          >
+            จัดการการเชื่อมต่อ
+          </button>
+        </GridPanel>
+      </div>
 
       <GridPanel>
         <h2 className="text-lg font-bold leading-none">ตัวเลือก</h2>
-        <div className="mt-2 grid gap-2">
+        <div className="mt-2 grid gap-2 md:grid-cols-2">
           <div className="grid min-h-11 grid-cols-[1fr_auto] items-center border border-moonwalk-silver px-2 dark:border-moonwalk-white/20">
             <span className="font-bold">ภาษา</span>
             <span className="text-xs text-moonwalk-slate dark:text-moonwalk-silver">
