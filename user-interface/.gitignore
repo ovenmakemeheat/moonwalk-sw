@@ -49,6 +49,7 @@ coverage
 
 # Misc
 *.tgz
+*.mp3
 .cache
 tmp
 temp

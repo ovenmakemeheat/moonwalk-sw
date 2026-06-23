@@ -34,14 +34,6 @@ export type LiveRehabCoachResponse = {
   source: "openrouter" | "fallback";
 };
 
-export type LiveRehabVoiceResponse = {
-  audioUrl: string;
-  point?: number;
-  provider?: string;
-  userMonthlyPoint?: number;
-  voice?: string;
-};
-
 export function createLiveRehabSnapshot(
   metrics: BiofeedbackMetrics,
 ): LiveRehabMetricSnapshot {

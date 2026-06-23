@@ -10,7 +10,6 @@ import {
   createMockLiveRehabSnapshot,
   type LiveRehabCoachResponse,
   type LiveRehabMetricSnapshot,
-  type LiveRehabVoiceResponse,
 } from "@/lib/live-rehab";
 import { cn } from "@user-interface/ui/lib/utils";
 
@@ -57,13 +56,22 @@ export function LiveRehabMode({
   const isRequestingRef = useRef(false);
   const mockIndexRef = useRef(0);
 
-  const speakWithFreeTts = async (text: string, onDone?: () => void) => {
+  const speakWithEdgeTts = async (text: string, onDone?: () => void) => {
     setStatusText("กำลังสร้างเสียง");
-    const voice = await postJson<LiveRehabVoiceResponse>(
-      "/api/live-rehab/voice",
-      { text },
-    );
-    const audio = new Audio(voice.audioUrl);
+    const response = await fetch("/api/live-rehab/voice", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+
+    if (!response.ok) {
+      setStatusText("สร้างเสียงไม่สำเร็จ");
+      return;
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
 
     audioRef.current?.pause();
     audioRef.current = audio;
@@ -74,14 +82,17 @@ export function LiveRehabMode({
     };
     audio.onended = () => {
       setIsSpeaking(false);
+      URL.revokeObjectURL(url);
       onDone?.();
     };
     audio.onerror = () => {
       setIsSpeaking(false);
-      setStatusText("เล่นเสียง FreeTTS ไม่สำเร็จ");
+      URL.revokeObjectURL(url);
+      setStatusText("เล่นเสียงไม่สำเร็จ");
     };
     await audio.play().catch(() => {
       setIsSpeaking(false);
+      URL.revokeObjectURL(url);
       setStatusText("เบราว์เซอร์บล็อกเสียง กดทดสอบเสียงอีกครั้ง");
     });
   };
@@ -153,7 +164,7 @@ export function LiveRehabMode({
             : "ใช้คำแนะนำสำรอง",
         );
 
-        await speakWithFreeTts(coach.text, () => {
+        await speakWithEdgeTts(coach.text, () => {
           setStatusText(
             isBluetoothConnected ? "กำลังฟังสัญญาณ" : "ใช้สัญญาณจำลอง",
           );
@@ -249,7 +260,7 @@ export function LiveRehabMode({
                 const nextValue = !value;
 
                 if (nextValue) {
-                  void speakWithFreeTts("เริ่มโหมดโค้ชเสียง");
+                  void speakWithEdgeTts("เริ่มโหมดโค้ชเสียง");
                 }
 
                 return nextValue;
@@ -307,7 +318,7 @@ export function LiveRehabMode({
           type="button"
           className="border border-moonwalk-silver px-3 py-2 text-xs font-bold text-moonwalk-navy dark:border-moonwalk-slate dark:text-moonwalk-white"
           onClick={() => {
-            void speakWithFreeTts("ทดสอบเสียงโค้ช Moon Walk", () => {
+            void speakWithEdgeTts("ทดสอบเสียงโค้ช Moon Walk", () => {
               setStatusText(
                 isEnabled
                   ? isBluetoothConnected
